@@ -265,7 +265,8 @@ check "config found at domains/<domain>/private/ghaim-config.php (open_basedir s
 check "default storage folder is ghaim-storage next to the config, mode 700" '[ "$(stat -c %a "$WALK/private/ghaim-storage" 2>/dev/null)" = 700 ]'
 mv "$WALK/private" "$WALK/public_html/private"
 check "a config inside public_html is ignored (503)" '[ "$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:$WALK_PORT/api/health.php")" = 503 ]'
-check "walking up past open_basedir raises no warnings" '[ ! -s "$WALK/php-errors.log" ]' "$(head -3 "$WALK/php-errors.log" 2>/dev/null)"
+check "walking up past open_basedir raises no warnings" '! grep -q -E "open_basedir restriction|PHP (Warning|Notice)" "$WALK/php-errors.log"' "$(grep -E 'PHP (Warning|Notice)' "$WALK/php-errors.log" 2>/dev/null | head -3)"
+check "a missing config is explained in the error log" 'grep -q "ghaim: no config found" "$WALK/php-errors.log"'
 mv "$WALK/public_html/private" "$WALK/private"
 cp "$WALK/private/ghaim-config.php" "$WALK/public_html/shop/config.local.php"
 rm "$WALK/private/ghaim-config.php"

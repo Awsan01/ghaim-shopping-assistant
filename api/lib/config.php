@@ -107,6 +107,9 @@ function ghaim_load_config(): ?array
 {
     $file = ghaim_find_config();
     if ($file === null) {
+        $basedir = (string) ini_get('open_basedir');
+        error_log('ghaim: no config found. Create private/ghaim-config.php next to public_html, or set GHAIM_CONFIG'
+            . ($basedir !== '' ? ' (open_basedir: ' . $basedir . ')' : ''));
         return null;
     }
     // Re-check the file on every request, so an edit (say enabled => false) works at once
@@ -139,6 +142,7 @@ function ghaim_ready_config(): ?array
     }
     $key = is_string($cfg['anthropic_api_key']) ? trim($cfg['anthropic_api_key']) : '';
     if ($key === '' || !preg_match('/^[\x21-\x7e]+$/', $key)) {
+        error_log('ghaim: anthropic_api_key is empty or has spaces in ' . $cfg['_file']);
         return null;
     }
     $workspace = is_string($cfg['workspace_id']) ? trim($cfg['workspace_id']) : '';
