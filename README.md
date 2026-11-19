@@ -193,7 +193,7 @@ The models are set in the private config. The browser only says `fast` or `smart
 What drives the cost:
 
 - **Calls per message.** Each message takes 1 to 5 model calls: a tool round (search, order lookup, cart, handover) adds a call. A typical recommendation takes two.
-- **Reply size.** `max_tokens` is 700 per call. The fast model (Haiku) runs at medium effort, so it thinks briefly before answering and checks its Arabic grammar; it gets 400 extra tokens for that thinking. The smart model (Sonnet) writes well at low effort and keeps the plain 700.
+- **Reply size.** `max_tokens` is 700 per call, and both models run at low effort, so the budget goes to the reply rather than long thinking, and replies stay fast.
 - **Caching.** The tools and the fixed instructions (about 2,000 tokens) are cached with prompt caching. Later calls within 5 minutes read them from the cache at a fraction of the input price. The conversation is cached automatically during the tool loop.
 - **Limits.** Per visitor IP: 30 messages per hour and 100 per day. Whole site: 500 messages per day. So the daily worst case is 500 messages × 5 calls.
 

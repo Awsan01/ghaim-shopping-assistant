@@ -22,8 +22,7 @@ return [
         'smart' => 'claude-sonnet-5-5',
     ],
 
-    // Most tokens a single model reply may use. The fast model gets 400 more for the short
-    // thinking it does before answering.
+    // Most tokens a single model reply may use.
     'max_tokens' => 700,
 
     // false pauses the demo: every API call answers 503 "demo paused". Claude is not called.

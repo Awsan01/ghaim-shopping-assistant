@@ -136,9 +136,9 @@ check "recommendation: tools and the static prompt are cached; per-request part 
      exit((\$r[\"system\"][0][\"cache_control\"][\"type\"] === \"ephemeral\" && !isset(\$r[\"system\"][1][\"cache_control\"])
        && (\$r[\"cache_control\"][\"type\"] ?? \"\") === \"ephemeral\" && str_contains(\$r[\"system\"][1][\"text\"], \"on the store website\")
        && !str_contains(\$r[\"system\"][0][\"text\"], \"Today is\") && str_contains(\$r[\"system\"][1][\"text\"], \"Today is \" . (new DateTime(\"now\", new DateTimeZone(\"Asia/Riyadh\")))->format(\"D M d Y\"))) ? 0 : 1);"'
-check "recommendation: fast = claude-haiku-5-5 at medium effort, max_tokens 700 + 400 for thinking, key sent" \
+check "recommendation: fast = claude-haiku-5-5 at low effort, max_tokens 700, key sent" \
   'last_mock | php -r "\$l = json_decode(stream_get_contents(STDIN), true); \$r = \$l[\"body\"];
-     exit((\$l[\"key_sent\"] && \$l[\"version\"] === \"2026-10-21\" && \$r[\"model\"] === \"claude-haiku-5-5\" && \$r[\"max_tokens\"] === 1100 && \$r[\"output_config\"][\"effort\"] === \"medium\") ? 0 : 1);"'
+     exit((\$l[\"key_sent\"] && \$l[\"version\"] === \"2026-10-21\" && \$r[\"model\"] === \"claude-haiku-5-5\" && \$r[\"max_tokens\"] === 700 && \$r[\"output_config\"][\"effort\"] === \"low\") ? 0 : 1);"'
 check "recommendation: the cached prompt has the Arabic grammar rule and its examples" \
   'last_mock | php -r "\$s = json_decode(stream_get_contents(STDIN), true)[\"body\"][\"system\"][0][\"text\"];
      exit((str_contains(\$s, \"Arabic grammar: make every pronoun\") && str_contains(\$s, \"تحب ريحته تكون زهرية ناعمة\")) ? 0 : 1);"'
