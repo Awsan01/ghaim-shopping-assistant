@@ -150,7 +150,7 @@ function ghaim_run_tool(string $name, array $input, array &$state, array $store,
 
         case 'add_to_cart':
             $raw = $input['product_id'] ?? '';
-            $id = ghaim_trim(ghaim_lower(ghaim_js_string($raw ?: '')));
+            $id = ghaim_trim(ghaim_lower(ghaim_js_string(ghaim_js_truthy($raw) ? $raw : '')));
             $p = $id !== '' ? ($store['by_id'][$id] ?? null) : null;
             if ($p === null) {
                 return ['content' => 'No product with id ' . $id, 'is_error' => true];
@@ -175,8 +175,8 @@ function ghaim_run_tool(string $name, array $input, array &$state, array $store,
             $state['actions'][] = [
                 'type' => 'handoff',
                 'ticket_id' => $ticket,
-                'reason' => ghaim_cut(ghaim_js_string($reason ?: ''), 300),
-                'summary' => ghaim_cut(ghaim_js_string(($summary ?: $reason) ?: ''), 800),
+                'reason' => ghaim_cut(ghaim_js_string(ghaim_js_truthy($reason) ? $reason : ''), 300),
+                'summary' => ghaim_cut(ghaim_js_string(ghaim_js_truthy($summary) ? $summary : (ghaim_js_truthy($reason) ? $reason : '')), 800),
             ];
             $state['steps'][] = ['k' => 'hand', 'id' => $ticket];
             return ['content' => ghaim_json([

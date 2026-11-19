@@ -110,7 +110,7 @@ function ghaim_search_products(array $store, array $f): array
 {
     $query = $f['query'] ?? '';
     $words = array_values(array_filter(
-        preg_split('/[\s,،]+/u', ghaim_lower(ghaim_js_string($query ?: ''))) ?: [],
+        preg_split('/[\s,،]+/u', ghaim_lower(ghaim_js_string(ghaim_js_truthy($query) ? $query : ''))) ?: [],
         static fn(string $w): bool => ghaim_utf16_len($w) > 1
     ));
     $fam = is_string($f['family'] ?? null) && isset($store['families'][$f['family']]) ? $f['family'] : null;

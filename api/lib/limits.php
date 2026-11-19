@@ -99,7 +99,7 @@ function ghaim_write_times($h, array $times): void
 {
     ftruncate($h, 0);
     rewind($h);
-    fwrite($h, json_encode(array_values($times)));
+    fwrite($h, (string) json_encode(array_values($times)));
     fflush($h);
 }
 

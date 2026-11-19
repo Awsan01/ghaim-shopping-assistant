@@ -108,6 +108,12 @@ function ghaim_trim(string $s): string
     return (string) preg_replace('/^[\s\x{FEFF}]+|[\s\x{FEFF}]+$/u', '', $s);
 }
 
+/** JavaScript truthiness: unlike PHP, "0" and empty arrays count as true. */
+function ghaim_js_truthy(mixed $v): bool
+{
+    return !($v === null || $v === false || $v === '' || $v === 0 || $v === 0.0 || (is_float($v) && is_nan($v)));
+}
+
 /** JavaScript String(value) for the values a tool input can hold. */
 function ghaim_js_string(mixed $v): string
 {
