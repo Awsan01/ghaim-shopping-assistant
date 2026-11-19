@@ -1,0 +1,61 @@
+# Ghaim Perfumes (عطور غَيم) shopping assistant demo
+# Access rules for LiteSpeed (Hostinger) and Apache 2.2 / 2.4.
+# Each block has a fallback, so the private files stay blocked when a module is missing.
+
+# No directory listings
+Options -Indexes
+
+# 1. mod_rewrite (LiteSpeed and most Apache hosts): answer 403
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Dotfiles and dot-folders such as .git, .env and .htaccess
+  # (.well-known stays open for SSL certificate checks)
+  RewriteRule (^|/)\.(?!well-known(/|$)) - [F,L]
+  # Server code and tests
+  RewriteRule ^(api/lib|tests)(/|$) - [F,L,NC]
+  # Orders are read only by the server
+  RewriteRule ^data/orders\.json$ - [F,L,NC]
+  # Config files and Markdown documents
+  RewriteRule (^|/)config[^/]*\.php$ - [F,L,NC]
+  RewriteRule \.md$ - [F,L,NC]
+</IfModule>
+
+# 2. Without mod_rewrite, mod_alias answers 404 for the same paths
+<IfModule !mod_rewrite.c>
+  <IfModule mod_alias.c>
+    RedirectMatch 404 /\.(?!well-known(/|$))
+    RedirectMatch 404 (?i)/(api/lib|tests)(/|$)
+    RedirectMatch 404 (?i)/data/orders\.json$
+    RedirectMatch 404 (?i)/config[^/]*\.php$
+    RedirectMatch 404 (?i)\.md$
+  </IfModule>
+</IfModule>
+
+# 3. Always on, by file name: dotfiles, Markdown, config files and orders.json
+<FilesMatch "(?i)(^\.|\.md$|^config.*\.php$|^orders\.json$)">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# 4. Last resort for hosts without mod_rewrite and mod_alias: git's own files,
+#    so a .git folder cannot be downloaded. api/lib and tests have their own .htaccess.
+<FilesMatch "^(HEAD|FETCH_HEAD|ORIG_HEAD|COMMIT_EDITMSG|config|description|index|packed-refs)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Small hardening headers for every response
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

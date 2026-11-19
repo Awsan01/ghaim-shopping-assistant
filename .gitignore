@@ -1,0 +1,21 @@
+# Real configuration: never commit it (the key lives outside the web root)
+config.local.php
+ghaim-config.php
+private/
+.env
+.env.*
+
+# Rate-limit counters and usage logs
+ghaim-storage/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.idea/
+.vscode/
+
+# Tooling
+node_modules/
