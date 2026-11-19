@@ -210,7 +210,7 @@ details summary{cursor:pointer;color:var(--mut);font-size:14px;min-height:32px;d
       <form class="composer" id="form" autocomplete="off">
         <div class="chips" id="chips"></div>
         <div class="row">
-          <input id="q" dir="auto" enterkeyhint="send" placeholder="اكتب رسالتك…">
+          <input id="q" dir="auto" enterkeyhint="send" maxlength="1000" placeholder="اكتب رسالتك…">
           <button type="submit" class="send" id="sendBtn" aria-label="إرسال"></button>
         </div>
       </form>
@@ -243,7 +243,7 @@ const MARK='<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="15" y="3" width
 
 const arCount=c=>c===0?'لا نتائج':c===1?'نتيجة واحدة':c===2?'نتيجتان':c<=10?c+' نتائج':c+' نتيجة';
 const T={
-ar:{store:'عطور غَيم',role:'مساعد المتجر',online:'متصل الآن',connecting:'جارٍ الاتصال…',offline:'افتح الصفحة داخل Claude لتشغيل المساعد',
+ar:{store:'عطور غَيم',role:'مساعد المتجر',online:'متصل الآن',connecting:'جارٍ الاتصال…',offline:'غير متاح الآن',
 chat:'الموقع',waTab:'واتساب',staff:'فريق الخدمة',waBiz:'حساب تجاري',waPreview:'معاينة: هكذا يرد المساعد على رقم واتساب الخاص بالمتجر. نفس المساعد ونفس الأدوات، على قناة مختلفة.',waHere:'سيكمل معك أحد موظفينا هنا في واتساب خلال دقائق.',chLabel:'القناة',chWeb:'الموقع',chWa:'واتساب',note:'متجر تجريبي: المنتجات والطلبات أمثلة لعرض المساعد.',
 welcome:'حيّاك الله في عطور غَيم! أقدر أساعدك تختار العطر المناسب لذوقك وميزانيتك، أو أتابع طلبك، أو أوصلك بأحد موظفينا.',
 ph:'اكتب رسالتك…',send:'إرسال',stop:'إيقاف',retry:'إعادة المحاولة',add:'أضف للسلة',added:'تمت الإضافة',soldout:'نفدت الكمية',
@@ -251,7 +251,7 @@ inStock:'متوفر',low:n=>'باقي '+n+' فقط',out:'نفد',lasts:(a,b)=>'�
 hoTitle:'تم تحويل المحادثة إلى فريق خدمة العملاء',ticket:'رقم التذكرة',wa:'متابعة على واتساب',waNone:'سيكمل معك أحد موظفينا هنا خلال دقائق.',
 waText:(id,s)=>'مرحباً، أتواصل بخصوص التذكرة '+id+'.\n'+s,
 searching:'يبحث في المنتجات…',checking:'يفحص الطلب…',
-sSearch:(f,c)=>'بحث في المنتجات'+(f?': '+f:'')+' ('+arCount(c)+')',sOrder:(n,st)=>'فحص الطلب '+n+': '+st,sCart:nm=>'أضاف «'+nm+'» إلى السلة',sHand:id=>'حوّل المحادثة إلى فريق الخدمة ('+id+')',sData:'قرأ بيانات المتجر',
+sSearch:(f,c)=>'بحث في المنتجات'+(f?': '+f:'')+' ('+arCount(c)+')',sOrder:(n,st)=>'فحص الطلب '+n+': '+st,sCart:nm=>'أضاف «'+nm+'» إلى السلة',sHand:id=>'حوّل المحادثة إلى فريق الخدمة ('+id+')',
 st:{shipped:'تم الشحن',processing:'قيد التجهيز',delivered:'تم التسليم',out_for_delivery:'مع المندوب اليوم',none:'رقم غير موجود'},
 upTo:n=>'حتى '+n+' ريال',hrs:n=>'يدوم '+n+'+ ساعات',
 staffTitle:'صندوق فريق الخدمة',staffEmpty:'لا توجد تحويلات بعد. عندما يحوّل المساعد محادثة إلى موظف، تظهر هنا مع ملخص جاهز والمحادثة كاملة.',
@@ -259,16 +259,16 @@ waiting:'بانتظار الرد',resolved:'تم الحل',markDone:'إغلاق 
 cart:'السلة',cartEmpty:'السلة فارغة. اطلب من المساعد إضافة منتج، أو اضغط «أضف للسلة» على أي بطاقة.',total:'المجموع',cartNote:'الدفع غير مفعّل في هذا العرض التجريبي.',remove:'حذف',
 settings:'الإعدادات',waLabel:'رقم واتساب لفريق الخدمة',waHint:'أرقام فقط مع رمز الدولة، مثل 966501234567. عند التحويل يظهر للعميل زر «متابعة على واتساب».',
 speed:'سرعة الردود',fast:'سريع',smart:'أذكى وأبطأ',stepsLabel:'خطوات المساعد',on:'إظهار',off:'إخفاء',reset:'محادثة جديدة',resetHint:'يمسح المحادثة والسلة وصندوق فريق الخدمة.',done:'تم',
-about:'يعمل المساعد على Claude من حسابك، وأول رسالة تطلب إذنك.',
+about:'يعمل المساعد على Claude عبر خادم المتجر. هذا عرض تجريبي عام، فلا تشارك بيانات شخصية.',
 sideTitle:'كيف يعمل المساعد',sideLead:'يفهم العميل بالعربية والإنجليزية، ويستخدم أدوات المتجر بدل أن يخمّن.',
 tools:[['search','يبحث في المنتجات','حسب الرائحة والميزانية والمناسبة'],['order','يتابع الطلبات','يقرأ الحالة وموعد الوصول'],['cart','يضيف إلى السلة','عندما يطلب العميل ذلك'],['staff','يحوّل إلى موظف','مع ملخص جاهز في صندوق فريق الخدمة']],
 tryOrders:'أرقام طلبات للتجربة',askOrder:n=>'وين طلبي رقم '+n+'؟',
-engine:'يعمل على Claude',modeFast:'الوضع السريع',modeSmart:'الوضع الأذكى',toolsOn:'أدوات المتجر مفعّلة',toolsOff:'بيانات المتجر داخل الطلب',
+engine:'يعمل على Claude',modeFast:'الوضع السريع',modeSmart:'الوضع الأذكى',toolsOn:'أدوات المتجر مفعّلة',
 starters:['أبغى عطر هدية لزوجتي، ميزانيتي 300 ريال','وين طلبي رقم 1042؟','أبغى أكلم موظف','Do you ship to Turkey?'],
-noAI:'المساعد غير متاح هنا. افتح هذه الصفحة داخل تطبيق Claude أو موقعه.',
-err:{not_granted:'يحتاج المساعد إذنك لاستخدام Claude. أعد تحميل الصفحة واختر «السماح».',rate_limited:'رسائل كثيرة خلال وقت قصير. انتظر دقيقة ثم حاول مرة أخرى.',session_expired:'انتهت الجلسة. سجّل الدخول إلى Claude مرة أخرى.',refused:'لا أستطيع المساعدة في هذا الطلب. أقدر أساعدك في العطور والطلبات.',prompt_too_large:'المحادثة طويلة جداً. ابدأ محادثة جديدة من الإعدادات.',off:'المساعد غير متاح في هذا العرض.',other:'حدث خطأ في الاتصال.'},
+err:{rate_limited:w=>'وصلت إلى الحد المسموح من الرسائل في هذا العرض التجريبي. حاول مرة أخرى بعد '+w+'.',site_limit:w=>'وصل العرض التجريبي إلى حدّه اليومي من الرسائل. حاول مرة أخرى بعد '+w+'.',busy:'الخدمة مشغولة الآن. حاول مرة أخرى بعد لحظات.',paused:'العرض التجريبي متوقف مؤقتاً. عُد إلينا لاحقاً.',network:'تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.',refused:'لا أستطيع المساعدة في هذا الطلب. أقدر أساعدك في العطور والطلبات.',too_large:'المحادثة طويلة جداً. ابدأ محادثة جديدة من الإعدادات.',bad_request:'تعذّر إرسال هذه الرسالة. ابدأ محادثة جديدة من الإعدادات.',other:'حدث خطأ غير متوقع. حاول مرة أخرى.'},
+wait:s=>{const m=Math.max(1,Math.ceil(s/60));if(m<60)return m===1?'دقيقة':m===2?'دقيقتين':m<=10?m+' دقائق':m+' دقيقة';const h=Math.ceil(m/60);return h===1?'ساعة':h===2?'ساعتين':h<=10?h+' ساعات':h+' ساعة'},
 cut:'انقطع الرد قبل اكتماله.',langBtn:'EN',langAria:'English',cartAria:'السلة',setAria:'الإعدادات'},
-en:{store:'Ghaim Perfumes',role:'Store assistant',online:'Online',connecting:'Connecting…',offline:'Open this page in Claude to run the assistant',
+en:{store:'Ghaim Perfumes',role:'Store assistant',online:'Online',connecting:'Connecting…',offline:'Unavailable right now',
 chat:'Website',waTab:'WhatsApp',staff:'Staff inbox',waBiz:'Business account',waPreview:'Preview: how the assistant replies on the store’s WhatsApp number. Same assistant, same tools, different channel.',waHere:'A team member will continue with you here on WhatsApp within minutes.',chLabel:'Channel',chWeb:'Website',chWa:'WhatsApp',note:'Demo store: products and orders are examples made for this assistant.',
 welcome:'Welcome to Ghaim Perfumes. I can help you choose a perfume for your taste and budget, track an order, or connect you with our team.',
 ph:'Type a message…',send:'Send',stop:'Stop',retry:'Try again',add:'Add to cart',added:'Added',soldout:'Sold out',
@@ -276,7 +276,7 @@ inStock:'In stock',low:n=>'Only '+n+' left',out:'Out of stock',lasts:(a,b)=>'Las
 hoTitle:'Chat handed to our customer care team',ticket:'Ticket',wa:'Continue on WhatsApp',waNone:'A team member will continue with you here within minutes.',
 waText:(id,s)=>"Hello, I'm writing about ticket "+id+'.\n'+s,
 searching:'Searching the catalogue…',checking:'Checking the order…',
-sSearch:(f,c)=>'Searched the catalogue'+(f?': '+f:'')+' ('+c+' result'+(c===1?'':'s')+')',sOrder:(n,st)=>'Checked order '+n+': '+st,sCart:nm=>'Added “'+nm+'” to the cart',sHand:id=>'Handed the chat to staff ('+id+')',sData:'Read the store data',
+sSearch:(f,c)=>'Searched the catalogue'+(f?': '+f:'')+' ('+c+' result'+(c===1?'':'s')+')',sOrder:(n,st)=>'Checked order '+n+': '+st,sCart:nm=>'Added “'+nm+'” to the cart',sHand:id=>'Handed the chat to staff ('+id+')',
 st:{shipped:'shipped',processing:'being prepared',delivered:'delivered',out_for_delivery:'out for delivery today',none:'not found'},
 upTo:n=>'up to '+n+' SAR',hrs:n=>'lasts '+n+'+ h',
 staffTitle:'Customer care inbox',staffEmpty:'No handoffs yet. When the assistant hands a chat to staff, it lands here with a ready summary and the full conversation.',
@@ -284,55 +284,26 @@ waiting:'Waiting',resolved:'Resolved',markDone:'Mark resolved',reopen:'Reopen',r
 cart:'Cart',cartEmpty:'Your cart is empty. Ask the assistant to add something, or tap “Add to cart” on a card.',total:'Total',cartNote:'Checkout is not part of this demo.',remove:'Remove',
 settings:'Settings',waLabel:'Staff WhatsApp number',waHint:'Digits with country code, like 966501234567. On handover, the customer sees a “Continue on WhatsApp” button.',
 speed:'Reply speed',fast:'Fast',smart:'Smarter, slower',stepsLabel:'Assistant steps',on:'Show',off:'Hide',reset:'Start a new chat',resetHint:'Clears the chat, the cart and the staff inbox.',done:'Done',
-about:'The assistant runs on Claude with your account; the first message asks for your permission.',
+about:'The assistant runs on Claude through the store’s server. This is a public demo, so please don’t share personal details.',
 sideTitle:'How the assistant works',sideLead:'It understands Arabic and English and uses the store’s tools instead of guessing.',
 tools:[['search','Searches products','by scent, budget and occasion'],['order','Tracks orders','reads the status and delivery date'],['cart','Adds to the cart','when the customer asks'],['staff','Hands over to staff','with a ready summary in the staff inbox']],
 tryOrders:'Order numbers to try',askOrder:n=>'Where is my order '+n+'?',
-engine:'Runs on Claude',modeFast:'fast mode',modeSmart:'smarter mode',toolsOn:'store tools on',toolsOff:'store data in the prompt',
+engine:'Runs on Claude',modeFast:'fast mode',modeSmart:'smarter mode',toolsOn:'store tools on',
 starters:['A gift perfume for my wife, budget 300 SAR','Where is my order 1042?','I want to talk to a person','وين طلبي رقم 1046؟'],
-noAI:'The assistant is not available here. Open this page in the Claude app or website.',
-err:{not_granted:'The assistant needs your permission to use Claude. Reload the page and choose Allow.',rate_limited:'Too many messages in a short time. Wait a minute and try again.',session_expired:'Your session ended. Sign in to Claude again.',refused:'I can’t help with that. I can help with perfumes and orders.',prompt_too_large:'This chat is too long. Start a new chat from Settings.',off:'The assistant is not available in this view.',other:'Connection problem.'},
+err:{rate_limited:w=>'You’ve reached the message limit for this demo. Please try again in '+w+'.',site_limit:w=>'The demo has reached its daily message limit. Please try again in '+w+'.',busy:'The service is busy right now. Please try again in a moment.',paused:'The demo is paused for now. Please check back later.',network:'Couldn’t reach the server. Check your connection and try again.',refused:'I can’t help with that. I can help with perfumes and orders.',too_large:'This chat is too long. Start a new chat from Settings.',bad_request:'This message couldn’t be sent. Start a new chat from Settings.',other:'Something went wrong. Please try again.'},
+wait:s=>{const m=Math.max(1,Math.ceil(s/60));if(m<60)return m===1?'1 minute':m+' minutes';const h=Math.ceil(m/60);return h===1?'1 hour':h+' hours'},
 cut:'The reply was cut short.',langBtn:'ع',langAria:'العربية',cartAria:'Cart',setAria:'Settings'}
 };
 
-const FAM={floral:{ar:'زهري',en:'Floral',c:['#f7b8c8','#cf5a7a'],s:0},oriental:{ar:'شرقي',en:'Oriental',c:['#f2c27a','#b0601c'],s:1},oud:{ar:'عود',en:'Oud',c:['#9a6a48','#3b2216'],s:1},musky:{ar:'مسكي',en:'Musky',c:['#f6f0f2','#c9b6bd'],s:0},woody:{ar:'خشبي',en:'Woody',c:['#dcb78c','#86552f'],s:1},fresh:{ar:'منعش',en:'Fresh',c:['#c4eaf4','#3b9fc0'],s:0},sweet:{ar:'حلو',en:'Sweet',c:['#f7d9aa','#c4843a'],s:0},bakhoor:{ar:'بخور',en:'Bakhoor',c:['#7a4430','#2e1710'],s:2},gift_set:{ar:'طقم هدايا',en:'Gift set',c:['#ecc8d3','#9e3558'],s:3}};
-const WHO={women:['نسائي','women'],men:['رجالي','men'],unisex:['للجنسين','unisex']};
-const OCC={gift:['هدية','gift'],wedding:['زواج','wedding'],evening:['سهرة','evening'],daily:['يومي','daily'],office:['دوام','office'],summer:['صيف','summer'],winter:['شتاء','winter']};
-const P=[
-{id:'p01',ar:'ورد الطائف الملكي',en:'Royal Taif Rose',fam:'floral',for:'women',notes_ar:'ورد طائفي، ليتشي، مسك أبيض',notes_en:'Taif rose, lychee, white musk',sz:[100,'ml'],price:289,hours:[8,10],stock:14,tags:['gift','evening','wedding']},
-{id:'p02',ar:'ياسمين الليل',en:'Night Jasmine',fam:'floral',for:'women',notes_ar:'ياسمين، زهر البرتقال، فانيلا',notes_en:'Jasmine sambac, orange blossom, vanilla',sz:[75,'ml'],price:245,hours:[7,9],stock:9,tags:['gift','evening','daily']},
-{id:'p03',ar:'مسك الحرير',en:'Silk Musk',fam:'musky',for:'unisex',notes_ar:'مسك أبيض، سوسن، لمسة قطن',notes_en:'White musk, iris, clean cotton',sz:[100,'ml'],price:199,hours:[6,8],stock:22,tags:['daily','office','gift']},
-{id:'p04',ar:'عود القمر',en:'Moon Oud',fam:'oud',for:'unisex',notes_ar:'عود كمبودي، زعفران، عنبر',notes_en:'Cambodian oud, saffron, amber',sz:[50,'ml'],price:590,hours:[12,14],stock:4,tags:['evening','wedding','winter','gift']},
-{id:'p05',ar:'عنبر الصحراء',en:'Desert Amber',fam:'oriental',for:'men',notes_ar:'عنبر، جلد، هيل',notes_en:'Amber, leather, cardamom',sz:[100,'ml'],price:349,hours:[10,12],stock:11,tags:['evening','winter']},
-{id:'p06',ar:'نسيم البحر',en:'Sea Breeze',fam:'fresh',for:'men',notes_ar:'برغموت، ملح البحر، نجيل الهند',notes_en:'Bergamot, sea salt, vetiver',sz:[100,'ml'],price:179,hours:[5,7],stock:30,tags:['daily','summer','office']},
-{id:'p07',ar:'نيرولي ناعم',en:'Soft Neroli',fam:'fresh',for:'women',notes_ar:'نيرولي، كمثرى، مسك ناعم',notes_en:'Neroli, pear, soft musk',sz:[50,'ml'],price:159,hours:[5,6],stock:18,tags:['daily','summer','office']},
-{id:'p08',ar:'فانيلا الكهرمان',en:'Amber Vanilla',fam:'sweet',for:'women',notes_ar:'فانيلا، تونكا، كراميل',notes_en:'Bourbon vanilla, tonka, caramel',sz:[75,'ml'],price:229,hours:[8,10],stock:0,tags:['gift','evening','winter']},
-{id:'p09',ar:'ساعة الصندل',en:'Sandalwood Hour',fam:'woody',for:'unisex',notes_ar:'صندل، أرز، فلفل وردي',notes_en:'Sandalwood, cedar, pink pepper',sz:[100,'ml'],price:319,hours:[9,11],stock:7,tags:['office','evening']},
-{id:'p10',ar:'دهن العود الفاخر',en:'Pure Oud Oil',fam:'oud',for:'unisex',notes_ar:'دهن عود مركّز ومعتّق',notes_en:'Aged concentrated oud oil',sz:[12,'ml'],price:690,hours:[20,24],stock:3,tags:['gift','wedding','evening']},
-{id:'p11',ar:'باقة العروس',en:'Bridal Bouquet',fam:'floral',for:'women',notes_ar:'فاوانيا، ورد، مسك أبيض',notes_en:'Peony, rose, white musk',sz:[100,'ml'],price:299,hours:[8,10],stock:6,tags:['wedding','gift','evening']},
-{id:'p12',ar:'مسك الطهارة',en:'Pure White Musk',fam:'musky',for:'unisex',notes_ar:'مسك أبيض نقي',notes_en:'Pure white musk',sz:[50,'ml'],price:89,hours:[4,6],stock:40,tags:['daily','summer']},
-{id:'p13',ar:'بخور غَيم',en:'Ghaim Bakhoor',fam:'bakhoor',for:'unisex',notes_ar:'بخور للبيت بالعود والورد',notes_en:'Home incense with oud and rose',sz:[50,'g'],price:129,hours:null,stock:15,tags:['gift','winter']},
-{id:'p14',ar:'طقم هدية غَيم',en:'Ghaim Gift Set',fam:'gift_set',for:'women',notes_ar:'مسك الحرير 50 مل، ياسمين الليل 30 مل، بخور 20 غ في علبة هدية',notes_en:'Silk Musk 50 ml, Night Jasmine 30 ml and 20 g bakhoor in a gift box',sz:null,price:299,hours:[6,9],stock:8,tags:['gift','wedding']},
-{id:'p15',ar:'تبغ وتمر',en:'Tobacco & Dates',fam:'sweet',for:'men',notes_ar:'ورق تبغ، تمر، عسل',notes_en:'Tobacco leaf, dates, honey',sz:[100,'ml'],price:379,hours:[10,12],stock:5,tags:['evening','winter']}
-];
+let FAM={},WHO={},OCC={},P=[],ORDERS=[];
 const rgba=(h,a)=>{const n=parseInt(h.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')'};
-const DAY=864e5;
-const iso=n=>new Date(Date.now()+n*DAY).toISOString().slice(0,10);
-const O={
-'1042':{city:'Riyadh',items:[['p01',1]],status:'shipped',placed:-2,shipped:-1,eta:2,note:'With the courier, tracking number GH-58817342'},
-'1043':{city:'Jeddah',items:[['p05',1],['p13',2]],status:'processing',placed:0,eta:3,note:'Being packed, ships tomorrow'},
-'1044':{city:'Dammam',items:[['p14',1]],status:'delivered',placed:-6,shipped:-5,delivered:-3},
-'1045':{city:'Riyadh',items:[['p04',1]],status:'out_for_delivery',placed:-3,shipped:-2,eta:0,note:'Driver arriving today between 4 and 8 pm'},
-'1046':{city:'Istanbul, Turkey',items:[['p02',1],['p03',1]],status:'shipped',placed:-4,shipped:-3,eta:5,note:'International shipment; customs fees may apply'}
-};
-
 const S={lang:'ar',wa:'',speed:'fast',steps:true};
 try{Object.assign(S,JSON.parse(localStorage.getItem('ghaim-demo')||'{}'))}catch(e){}
 const saveS=()=>{try{localStorage.setItem('ghaim-demo',JSON.stringify(S))}catch(e){}};
 const t=k=>T[S.lang][k];
 
 let msgs=[],cart={},tickets=[],seq=0,busy=false,ctl=null,view='chat',chipsNow=null,sheetKind=null;
-let sample=null,toolsOK=false,aiState='wait';
+let aiState='wait';
 const uid=()=>'m'+(++seq)+Date.now().toString(36);
 const welcome=()=>({id:'m0',role:'bot',welcome:true,steps:[],products:['p01','p04','p14'],time:Date.now()});
 const prod=id=>P.find(p=>p.id===id);
@@ -340,154 +311,90 @@ const pname=id=>{const p=prod(id);return p?(S.lang==='ar'?p.ar:p.en):id};
 const clean=s=>String(s||'').replace(/\[\[[^\]]*\]\]/g,'').replace(/\[\[[^\]]*\]?$/,'').replace(/\[$/,'').replace(/[ \t]+$/gm,'').replace(/\n{3,}/g,'\n\n').trim();
 const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
 
-function view_(p){return{id:p.id,name_ar:p.ar,name_en:p.en,family:p.fam,for:p.for,notes:p.notes_en,notes_ar:p.notes_ar,size:p.sz?p.sz[0]+' '+p.sz[1]:'gift box',price_sar:p.price,lasts_hours:p.hours?p.hours.join('-'):undefined,stock:p.stock===0?'out of stock':p.stock<=5?'only '+p.stock+' left':'in stock',good_for:p.tags.join(', ')}}
-
-function searchProducts(f){
-  f=f||{};
-  const words=String(f.query||'').toLowerCase().split(/[\s,،]+/).filter(w=>w.length>1);
-  const fam=FAM[f.family]?f.family:null,who=WHO[f.for]?f.for:null,occ=OCC[f.occasion]?f.occasion:null;
-  const max=Number(f.max_price)>0?Number(f.max_price):Infinity,minH=Number(f.min_hours)||0,only=f.in_stock_only===true;
-  const base=p=>p.price<=max&&(!who||who==='unisex'||p.for===who||p.for==='unisex')&&(!only||p.stock>0);
-  const score=p=>{if(!words.length)return 0;const h=[p.ar,p.en,p.notes_ar,p.notes_en,p.fam,FAM[p.fam].ar].concat(p.tags,p.tags.map(x=>OCC[x][0])).join(' ').toLowerCase();return words.filter(w=>h.includes(w)).length};
-  let list=P.filter(p=>base(p)&&(!fam||p.fam===fam)&&(!occ||p.tags.includes(occ))&&(p.hours?p.hours[0]>=minH:minH===0));
-  if(words.length&&list.some(p=>score(p)>0))list=list.filter(p=>score(p)>0);
-  let relaxed=false;
-  if(!list.length){relaxed=true;list=P.filter(base)}
-  list.sort((a,b)=>(b.stock>0)-(a.stock>0)||score(b)-score(a)||(max<Infinity?b.price-a.price:a.price-b.price));
-  const r={count:list.length,results:list.slice(0,6).map(view_)};
-  if(relaxed)r.note='No exact match. These are the closest options for this budget and person.';
-  return r;
-}
-function orderStatus(n){
-  const o=O[n];
-  if(!o)return{found:false,order_number:n,note:'No order with this number. Ask the customer to check the number in their confirmation message.'};
-  const items=o.items.map(([id,q])=>{const p=prod(id);return{name_ar:p.ar,name_en:p.en,qty:q,price_sar:p.price}});
-  const r={found:true,order_number:n,status:o.status,city:o.city,items,total_sar:items.reduce((s,i)=>s+i.qty*i.price_sar,0),placed_on:iso(o.placed)};
-  if(o.shipped!=null)r.shipped_on=iso(o.shipped);
-  if(o.eta!=null)r.expected_delivery=iso(o.eta);
-  if(o.delivered!=null)r.delivered_on=iso(o.delivered);
-  if(o.note)r.note=o.note;
-  return r;
-}
 function addToCart(id,q){const p=prod(id);if(!p||p.stock<=0)return false;cart[id]=Math.min((cart[id]||0)+(q||1),p.stock);renderCartBadge();return true}
 function cartSummary(){const items=Object.entries(cart).map(([id,q])=>{const p=prod(id);return{id,name_ar:p.ar,name_en:p.en,qty:q,price_sar:p.price}});return{items,total_sar:items.reduce((s,i)=>s+i.qty*i.price_sar,0)}}
 function transcript(){return msgs.filter(m=>!m.welcome&&(m.role==='user'||clean(m.text))).map(m=>({who:m.role,text:m.role==='user'?m.text:clean(m.text)})).slice(-20)}
-function makeTicket(reason,summary){
-  const tk={id:'T-'+(1001+tickets.length),time:new Date().toISOString(),ch:view==='wa'?'wa':'web',reason:String(reason||'').slice(0,300),summary:String(summary||reason||'').slice(0,800),status:'waiting',transcript:transcript()};
+function makeTicket(reason,summary,id,ch){
+  const old=id&&tickets.find(x=>x.id===id);if(old)return old;
+  const tk={id:id||'T-'+(1001+tickets.length),time:new Date().toISOString(),ch:ch||(view==='wa'?'wa':'web'),reason:String(reason||'').slice(0,300),summary:String(summary||reason||'').slice(0,800),status:'waiting',transcript:transcript()};
   tickets.push(tk);renderTabs();renderStaff();return tk;
 }
 
-function rules(inline){
-  const c=cartSummary();
-  const cartTxt=c.items.length?c.items.map(i=>i.name_en+' x'+i.qty).join(', ')+' (total '+c.total_sar+' SAR)':'empty';
-  const open=tickets.filter(x=>x.status==='waiting').map(x=>x.id).join(', ')||'none';
-  let r=`You are the shopping assistant of Ghaim Perfumes (عطور غيم), an online perfume store in Saudi Arabia. You chat with customers ${view==='wa'?"on the store's WhatsApp Business number, so keep replies short like a WhatsApp message":'on the store website'}. This is a demo store: products and orders come only from the store data.
-
-Style
-- Reply in the customer's language and tone: Gulf Arabic if they write Gulf Arabic, simple Modern Standard Arabic for other Arabic, English for English.
-- Warm and brief: 1 to 3 short sentences. Plain text: no headings, tables, bullet lists or emoji.
-- If you don't know who the perfume is for, the taste, or the budget, ask one short question before recommending, with 2 or 3 options.
-- Recommend at most 3 products and say in a few words why each fits (scent, how long it lasts, price in SAR).
-- Arabic: write like a friendly Saudi store employee texting a customer. Use natural Gulf Arabic with correct grammar and normal word order, in short sentences. Use أبغى (never أبي) for "I want", تبغى for "you want" and وش for "what". If a sentence sounds awkward in dialect, write it in simple Modern Standard Arabic instead, and never mix the two inside one sentence. Examples of the right style:
-  «أكيد! وش نوع الريحة اللي تحبها زوجتك؟ زهرية ناعمة ولا شرقية؟»
-  «هذي أفضل الخيارات تحت 300 ريال، وكلها ريحتها تثبت طول اليوم.»
-  «تم شحن طلبك رقم 1042 أمس، ويوصلك خلال يومين إن شاء الله.»
-- Quick replies follow the same style, for example «أبغى شي ناعم».
-
-Facts
-- Never invent products, prices, stock, dates or order details. ${inline?'Use only the store data below.':'Get them from the tools. Call tools silently, without writing anything first, and write your reply after the results.'}
-- If something is out of stock, say so and offer the closest in-stock option.
-- Help only with this store: perfumes, gifts, orders, shipping, payment and returns. For anything else, say politely that you can only help with the store.
-- Hand over to the customer care team ${inline?'(add the handoff line described below)':'(call handoff_to_staff)'} when the customer asks for a person, complains, reports a damaged or wrong item, asks for a refund or has a payment problem. Then tell them a team member will continue with them.
-- If the customer keeps chatting after a handover, for example to keep shopping, help them normally and don't repeat the handover message.
-
-Product cards
-- After your text, put each product you recommend on its own line as [[p01]] (the product id). The page shows these as cards with a picture, price and an add-to-cart button, so don't list prices again under them.
-- End every reply with one line of 2 or 3 short replies the customer might tap next, in their language: [[chips: first | second | third]]
-
-Store policies
-- Saudi Arabia: delivery in 1 to 3 working days; free over 199 SAR, otherwise 25 SAR. Cash on delivery in Saudi Arabia costs 15 SAR extra.
-- Gulf countries: 3 to 6 working days, 45 SAR.
-- Turkey and other countries: 6 to 10 working days, 95 SAR. Customs fees, if any, are paid by the customer.
-- Payment: mada, Visa, Mastercard, Apple Pay, or 4 interest-free instalments.
-- Returns: unopened items within 7 days of delivery; opened items only if damaged or wrong. Refunds take 5 to 7 working days.
-- Free gift wrapping with a printed message card. 2 free samples with orders over 300 SAR.
-- Customer care: 10 am to 11 pm Saudi time, every day.
-
-Now
-- Today is ${new Date().toDateString()}.
-- Cart: ${cartTxt}.
-- Open staff tickets: ${open}.`;
-  if(inline)r+=`
-
-Store data
-Catalogue: ${JSON.stringify(P.map(view_))}
-Orders: ${JSON.stringify(Object.keys(O).map(orderStatus))}
-- To add a product to the cart when the customer asks, add a line [[cart: p01]].
-- To hand over to staff, add a line [[handoff: 2 or 3 sentences for the staff member, in the customer's language]].`;
-  return r;
+const cap=(s,n)=>{const a=Array.from(s);return a.length>n?a.slice(0,n).join(''):s};
+function buildTurns(){
+  return msgs.filter(m=>!m.welcome&&!m.pending&&(m.role==='user'||String(m.text||'').trim())).slice(-16).map(m=>m.role==='user'?{role:'user',content:cap(String(m.text).trim(),1000)}:{role:'assistant',content:cap(String(m.text).trim(),2000)});
 }
-function buildTurns(inline){
-  const hist=msgs.filter(m=>!m.welcome&&!m.pending&&(m.role==='user'||String(m.text||'').trim())).slice(-16).map(m=>({role:m.role==='user'?'user':'assistant',content:String(m.text).trim()}));
-  return[{role:'user',content:rules(inline)}].concat(hist);
+function chatBody(ch){
+  return{messages:buildTurns(),channel:ch,speed:S.speed==='smart'?'smart':'fast',cart:Object.entries(cart).map(([id,qty])=>({id,qty})),open_tickets:tickets.filter(x=>x.status==='waiting').map(x=>x.id),next_ticket_id:'T-'+(1001+tickets.length),wa_button:!!S.wa};
 }
-
-function makeTools(bot){
-  const add=s=>{bot.steps.push(s);patch(bot);return s};
-  const fin=s=>{s.ok=true;patch(bot)};
-  return[
-  {name:'search_products',description:'Search the store catalogue. Returns up to 6 products with id, Arabic and English names, scent family, who it is for, notes, size, price in SAR, how many hours it lasts and stock. Use it before recommending or quoting any product. All filters are optional.',
-   inputSchema:{type:'object',properties:{query:{type:'string',description:'Words to match in names and notes, Arabic or English, e.g. rose, oud, vanilla'},family:{type:'string',enum:Object.keys(FAM)},for:{type:'string',enum:['women','men','unisex']},max_price:{type:'number',description:'Highest price in SAR'},min_hours:{type:'number',description:'Minimum hours the scent should last'},occasion:{type:'string',enum:Object.keys(OCC)},in_stock_only:{type:'boolean'}}},
-   async execute(input){const f=input||{};const s=add({k:'search',f,ok:false});await wait(350);const r=searchProducts(f);s.c=r.count;fin(s);return r}},
-  {name:'get_order_status',description:'Look up an order by its number. Returns status (processing, shipped, out_for_delivery, delivered), items, city, total and dates: placed, shipped, expected delivery or delivered. Returns found:false if there is no such order.',
-   inputSchema:{type:'object',properties:{order_number:{type:'string'}},required:['order_number']},
-   async execute(input){const n=digits(input&&input.order_number);const s=add({k:'order',n,ok:false});await wait(350);const r=orderStatus(n);s.st=r.found?r.status:'none';fin(s);return r}},
-  {name:'add_to_cart',description:"Add a product to the customer's cart, only when the customer asks to buy or add it. Returns the cart with its total in SAR.",
-   inputSchema:{type:'object',properties:{product_id:{type:'string'},quantity:{type:'integer',minimum:1,maximum:5}},required:['product_id']},
-   execute(input){const id=String(input&&input.product_id||'').toLowerCase().trim();const p=prod(id);if(!p)throw new Error('No product with id '+id);if(p.stock<=0)throw new Error(p.en+' is out of stock');addToCart(id,Math.max(1,Math.min(5,parseInt(input.quantity,10)||1)));add({k:'cart',id,ok:true});return cartSummary()}},
-  {name:'handoff_to_staff',description:"Hand the chat to a person on the customer care team. Use when the customer asks for a person, complains, reports a damaged or wrong item, asks for a refund or has a payment problem. summary: 2 or 3 sentences for the staff member, in the customer's language, with any order number.",
-   inputSchema:{type:'object',properties:{reason:{type:'string'},summary:{type:'string'}},required:['summary']},
-   execute(input){if(bot.handoff)return{ticket_id:bot.handoff,note:'Already handed over'};const tk=makeTicket(input&&input.reason,input&&input.summary);bot.handoff=tk.id;add({k:'hand',id:tk.id,ok:true});return{ticket_id:tk.id,team:'Ghaim customer care',expected_reply:'within 10 minutes, 10 am to 11 pm Saudi time',whatsapp_button_shown:!!S.wa}}}
-  ];
+async function askServer(body,signal){
+  let res,data=null;
+  try{res=await fetch('api/chat.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal,cache:'no-store'})}
+  catch(e){if(signal.aborted)throw e;throw{code:'network'}}
+  try{data=await res.json()}catch(e){if(signal.aborted)throw e}
+  if(res.ok&&data&&typeof data.text==='string')return{text:data.text,actions:Array.isArray(data.actions)?data.actions:[],steps:Array.isArray(data.steps)?data.steps:[],truncated:!!data.truncated,refused:!!data.refused};
+  const code=data&&data.error;
+  if(res.status===429)throw{code:data&&data.scope==='site'?'site_limit':'rate_limited',until:Date.now()+1000*(Number(data&&data.retry_after)||Number(res.headers.get('Retry-After'))||60)};
+  if(['paused','busy','too_large','bad_request'].includes(code))throw{code};
+  if(res.status===413)throw{code:'too_large'};
+  throw{code:res.status>=500&&!data?'busy':'other'};
+}
+function applyStep(s,r,bot,ch){
+  const a=r.actions.find(x=>!x.used&&(s.k==='cart'?x.type==='add_to_cart'&&x.product_id===s.id:s.k==='hand'&&x.type==='handoff'&&x.ticket_id===s.id));
+  if(!a)return;
+  a.used=true;
+  if(a.type==='add_to_cart')addToCart(a.product_id,a.quantity);
+  else bot.handoff=makeTicket(a.reason,a.summary,a.ticket_id,ch).id;
+}
+function setAi(s){if(aiState!==s){aiState=s;renderStatus();renderSide()}}
+async function checkHealth(){
+  try{const r=await fetch('api/health.php',{cache:'no-store'});const d=await r.json().catch(()=>null);setAi(r.ok&&d&&d.ok===true?'on':'off')}catch(e){setAi('off')}
 }
 
 async function send(text){
-  text=String(text||'').trim();
+  text=cap(String(text||'').trim(),1000);
   if(!text||busy)return;
   if(view==='staff')setView('chat');
   $('#q').value='';
   const m={id:uid(),role:'user',text,time:Date.now()};
   msgs.push(m);append(m);
   setChips([]);
-  await ready;
-  if(!sample){const b={id:uid(),role:'bot',text:'',steps:[],err:'noai',time:Date.now()};msgs.push(b);append(b);setChips(null);return}
   await generate();
 }
 async function generate(){
-  const inline=!toolsOK;
+  const ch=view==='wa'?'wa':'web',body=chatBody(ch);
   const bot={id:uid(),role:'bot',text:'',steps:[],products:[],chips:[],pending:true,time:Date.now()};
   msgs.push(bot);append(bot);
   busy=true;const my=new AbortController();ctl=my;setComposer();setChips([]);
-  const opts={signal:my.signal,modelTier:S.speed==='smart'?'default':'quick',onText:({text})=>{bot.text=text;bot.pending=false;patch(bot)}};
-  if(inline){opts.cache=false;bot.steps.push({k:'data',ok:true})}else opts.tools=makeTools(bot);
-  let fallback=false,cancelled=false;
+  let cancelled=false;
   try{
-    const r=await sample(buildTurns(inline),opts);
-    bot.text=r.text;
-    if(r.truncated)bot.err='cut';
-  }catch(e){
-    const code=e&&e.code;
-    if(code==='tools_unavailable'&&!inline)fallback=true;
-    else if(code==='cancelled'){cancelled=true;if(e.text)bot.text=e.text}
+    const r=await askServer(body,my.signal);
+    setAi('on');
+    if(r.refused)bot.err='refused';
     else{
-      bot.text=code==='refused'?'':(e&&e.text)||bot.text;
-      bot.err=code||'other';
-      bot.retry=!['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed','refused','prompt_too_large','session_expired'].includes(code);
+      for(const s of r.steps){
+        const st=Object.assign({},s,{ok:false});
+        bot.steps.push(st);patch(bot);
+        if(S.steps)await wait(250);
+        if(my.signal.aborted)throw new Error('stopped');
+        st.ok=true;applyStep(st,r,bot,ch);patch(bot);
+      }
+      bot.text=r.text;
+      if(r.truncated)bot.err='cut';
+      else if(!clean(r.text)&&!bot.steps.length){bot.err='other';bot.retry=true}
+    }
+  }catch(e){
+    if(my.signal.aborted)cancelled=true;
+    else{
+      bot.err=e&&e.code||'other';bot.until=e&&e.until||0;
+      bot.retry=['busy','network','other'].includes(bot.err);
+      if(bot.err==='paused')setAi('off');
     }
   }
   if(ctl===my){busy=false;ctl=null}
-  if(fallback){toolsOK=false;msgs=msgs.filter(x=>x!==bot);const el=document.getElementById(bot.id);if(el)el.remove();renderSide();return generate()}
-  if(cancelled&&!clean(bot.text)&&!bot.handoff&&bot.steps.every(s=>s.k==='data')){msgs=msgs.filter(x=>x!==bot);const el=document.getElementById(bot.id);if(el)el.remove();setComposer();setChips(null);return}
+  if(!msgs.includes(bot))return;
+  bot.steps=bot.steps.filter(s=>s.ok);
+  if(cancelled&&!clean(bot.text)&&!bot.handoff&&!bot.steps.length){msgs=msgs.filter(x=>x!==bot);const el=document.getElementById(bot.id);if(el)el.remove();setComposer();setChips(null);return}
   finalize(bot);setComposer();
 }
 function finalize(m){
@@ -498,11 +405,6 @@ function finalize(m){
   m.products=ids.slice(0,4);
   const ch=raw.match(/\[\[\s*chips\s*:([^\]]*)\]\]/i);
   m.chips=ch?ch[1].split('|').map(s=>s.trim()).filter(Boolean).slice(0,3):[];
-  if(m.steps.some(s=>s.k==='data')){
-    for(const x of raw.matchAll(/\[\[\s*cart\s*:\s*(p\d{2})\s*\]\]/gi)){const id=x[1].toLowerCase();if(addToCart(id,1))m.steps.push({k:'cart',id,ok:true})}
-    const h=raw.match(/\[\[\s*handoff\s*:([^\]]*)\]\]/i);
-    if(h&&!m.handoff){const tk=makeTicket('',h[1].trim());m.handoff=tk.id;m.steps.push({k:'hand',id:tk.id,ok:true})}
-  }
   if(m.handoff){const tk=tickets.find(x=>x.id===m.handoff);if(tk)tk.transcript=transcript()}
   patch(m);renderStaff();renderTabs();
   setChips(m.chips.length?m.chips:null);
@@ -530,16 +432,13 @@ function stepLabel(s){
   if(s.k==='order')return s.ok?L.sOrder(s.n,L.st[s.st]||L.st.none):L.checking;
   if(s.k==='cart')return L.sCart(pname(s.id));
   if(s.k==='hand')return L.sHand(s.id);
-  if(s.k==='data')return L.sData;
   return '';
 }
-function errLabel(c){
+function errLabel(m){
   const L=T[S.lang];
-  if(c==='cut')return L.cut;
-  if(c==='noai')return L.noAI;
-  if(L.err[c])return L.err[c];
-  if(['sampling_disabled','not_declared','capability_disabled','capability_removed','tools_unavailable'].includes(c))return L.err.off;
-  return L.err.other;
+  if(m.err==='cut')return L.cut;
+  const e=L.err[m.err]||L.err.other;
+  return typeof e==='function'?e(L.wait(((m.until||0)-Date.now())/1000)):e;
 }
 function art(p,key){
   const f=FAM[p.fam],a=f.c[0],b=f.c[1],g='g'+key.replace(/[^a-z0-9]/gi,''),s=p.id==='p10'?4:f.s;
@@ -566,7 +465,7 @@ function cardHTML(id,mid){
 function hoHTML(id){
   const tk=tickets.find(x=>x.id===id);if(!tk)return '';
   const wa=tk.ch==='wa'?'<div class="mut">'+t('waHere')+'</div>':S.wa?'<a class="wa" href="https://wa.me/'+S.wa+'?text='+encodeURIComponent(T[S.lang].waText(tk.id,tk.summary))+'" target="_blank" rel="noopener">'+I.chat+'<span>'+t('wa')+'</span></a>':'<div class="mut">'+t('waNone')+'</div>';
-  return '<div class="ho"><b>'+I.staff+'<span>'+t('hoTitle')+'</span></b><div class="mut">'+t('ticket')+': '+tk.id+'</div>'+wa+'</div>';
+  return '<div class="ho"><b>'+I.staff+'<span>'+t('hoTitle')+'</span></b><div class="mut">'+t('ticket')+': '+esc(tk.id)+'</div>'+wa+'</div>';
 }
 function msgHTML(m){
   const tm=m.time?'<div class="tm">'+timeTxt(m.time)+(m.role==='user'?'<span class="ticks">✓✓</span>':'')+'</div>':'';
@@ -574,7 +473,7 @@ function msgHTML(m){
   const text=m.welcome?t('welcome'):clean(m.text);
   const steps=S.steps&&m.steps&&m.steps.length?'<div class="steps">'+m.steps.map(s=>'<div class="step'+(s.ok?'':' run')+'">'+(s.ok?I.check:I.spin)+'<span>'+esc(stepLabel(s)).replace(/(T-\d+)/g,'<bdi class="nw">$1</bdi>')+'</span></div>').join('')+'</div>':'';
   const typing=m.pending&&!text?'<div class="typing" aria-hidden="true"><i></i><i></i><i></i></div>':'';
-  const err=m.err?'<div class="err"><span>'+esc(errLabel(m.err))+'</span>'+(m.retry?'<button type="button" class="retry" data-retry="'+m.id+'">'+t('retry')+'</button>':'')+'</div>':'';
+  const err=m.err?'<div class="err"><span>'+esc(errLabel(m))+'</span>'+(m.retry?'<button type="button" class="retry" data-retry="'+m.id+'">'+t('retry')+'</button>':'')+'</div>':'';
   const cards=m.products&&m.products.length?'<div class="cards">'+m.products.map(id=>cardHTML(id,m.id)).join('')+'</div>':'';
   const ho=m.handoff?hoHTML(m.handoff):'';
   const inner=steps+typing+(text?'<div class="txt" dir="auto">'+fmt(text)+'</div>':'')+err+(text&&!m.pending?tm:'');
@@ -606,13 +505,13 @@ function renderTabs(){
 function renderCartBadge(){const n=Object.values(cart).reduce((a,b)=>a+b,0);const b=$('#cartN');b.textContent=n;b.hidden=!n}
 function renderSide(){
   const L=T[S.lang],ic={search:I.search,order:I.order,cart:I.bag,staff:I.staff};
-  $('#side').innerHTML='<h3>'+L.sideTitle+'</h3><p class="mut">'+L.sideLead+'</p>'+L.tools.map(x=>'<div class="tool">'+ic[x[0]]+'<div><b>'+x[1]+'</b><span>'+x[2]+'</span></div></div>').join('')+'<h4>'+L.tryOrders+'</h4><div class="orders">'+Object.keys(O).map(n=>'<button type="button" class="chip" data-order="'+n+'">'+n+'</button>').join('')+'</div><p class="mut small">'+L.engine+' · '+(S.speed==='smart'?L.modeSmart:L.modeFast)+(aiState==='on'?' · '+(toolsOK?L.toolsOn:L.toolsOff):'')+'</p>';
+  $('#side').innerHTML='<h3>'+L.sideTitle+'</h3><p class="mut">'+L.sideLead+'</p>'+L.tools.map(x=>'<div class="tool">'+ic[x[0]]+'<div><b>'+x[1]+'</b><span>'+x[2]+'</span></div></div>').join('')+(ORDERS.length?'<h4>'+L.tryOrders+'</h4><div class="orders">'+ORDERS.map(n=>'<button type="button" class="chip" data-order="'+esc(n)+'">'+esc(n)+'</button>').join('')+'</div>':'')+'<p class="mut small">'+L.engine+' · '+(S.speed==='smart'?L.modeSmart:L.modeFast)+(aiState==='on'?' · '+L.toolsOn:'')+'</p>';
 }
 function timeTxt(s){try{return new Date(s).toLocaleTimeString(S.lang==='ar'?'ar-u-nu-latn':'en-GB',{hour:'2-digit',minute:'2-digit'})}catch(e){return ''}}
 function renderStaff(){
   const el=$('#tickets');
   if(!tickets.length){el.innerHTML='<div class="empty">'+I.staff+'<h3>'+t('staffTitle')+'</h3><p>'+t('staffEmpty')+'</p></div>';return}
-  el.innerHTML='<h3 class="sh">'+t('staffTitle')+'</h3>'+tickets.slice().reverse().map(tk=>'<article class="tk"><header><span><bdi>'+tk.id+'</bdi> · <bdi>'+timeTxt(tk.time)+'</bdi></span><span class="pill'+(tk.status==='done'?' done':'')+'">'+(tk.status==='done'?t('resolved'):t('waiting'))+'</span></header><div class="ch">'+t('chLabel')+': '+(tk.ch==='wa'?t('chWa'):t('chWeb'))+'</div>'+(tk.reason?'<div><b>'+t('reason')+':</b> <span dir="auto">'+esc(tk.reason)+'</span></div>':'')+'<div><b>'+t('summary')+'</b><p dir="auto">'+esc(tk.summary)+'</p></div><details><summary>'+t('transcript')+' ('+tk.transcript.length+')</summary><div class="tr">'+tk.transcript.map(x=>'<div><b>'+(x.who==='user'?t('customer'):t('assistant'))+':</b> <span dir="auto">'+esc(x.text)+'</span></div>').join('')+'</div></details><button type="button" class="ghost" data-done="'+tk.id+'">'+(tk.status==='done'?t('reopen'):t('markDone'))+'</button></article>').join('');
+  el.innerHTML='<h3 class="sh">'+t('staffTitle')+'</h3>'+tickets.slice().reverse().map(tk=>'<article class="tk"><header><span><bdi>'+esc(tk.id)+'</bdi> · <bdi>'+timeTxt(tk.time)+'</bdi></span><span class="pill'+(tk.status==='done'?' done':'')+'">'+(tk.status==='done'?t('resolved'):t('waiting'))+'</span></header><div class="ch">'+t('chLabel')+': '+(tk.ch==='wa'?t('chWa'):t('chWeb'))+'</div>'+(tk.reason?'<div><b>'+t('reason')+':</b> <span dir="auto">'+esc(tk.reason)+'</span></div>':'')+'<div><b>'+t('summary')+'</b><p dir="auto">'+esc(tk.summary)+'</p></div><details><summary>'+t('transcript')+' ('+tk.transcript.length+')</summary><div class="tr">'+tk.transcript.map(x=>'<div><b>'+(x.who==='user'?t('customer'):t('assistant'))+':</b> <span dir="auto">'+esc(x.text)+'</span></div>').join('')+'</div></details><button type="button" class="ghost" data-done="'+esc(tk.id)+'">'+(tk.status==='done'?t('reopen'):t('markDone'))+'</button></article>').join('');
 }
 function setView(v){
   const was=view;view=v;
@@ -673,21 +572,23 @@ $('#sheet').addEventListener('click',e=>{
 $('#sheet').addEventListener('input',e=>{if(e.target.id==='waIn'){S.wa=digits(e.target.value);saveS()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 
-const ready=(async()=>{
-  try{sample=window.claude&&typeof window.claude.use==='function'?await window.claude.use('sample'):null}catch(e){sample=null}
-  if(sample){try{const l=await sample.limits();toolsOK=!!(l&&l.tools&&l.tools.maxCount>=4)}catch(e){toolsOK=false}aiState='on'}else aiState='off';
-  renderStatus();renderSide();
-})();
-
-function start(d){
-  d=d||{};
-  msgs=Array.isArray(d.msgs)&&d.msgs.length?d.msgs.map(m=>Object.assign({},m,{pending:false})):[welcome()];
-  cart=d.cart&&typeof d.cart==='object'?d.cart:{};
-  tickets=Array.isArray(d.tickets)?d.tickets:[];
+function start(){
+  msgs=[welcome()];cart={};tickets=[];
   applyLang();
 }
-if(window.claude&&window.claude.hot&&typeof window.claude.hot.snapshot==='function')window.claude.hot.snapshot(()=>({msgs,cart,tickets}));
-if(window.claude&&window.claude.hot&&window.claude.hot.ready)window.claude.hot.ready(start);else start((window.claude&&window.claude.hot&&window.claude.hot.data)||{});
+async function boot(){
+  applyLang();
+  checkHealth();
+  try{
+    const r=await fetch('data/products.json',{cache:'no-cache'});
+    const d=await r.json();
+    FAM=d.families||{};WHO=d.who||{};OCC=d.occasions||{};
+    P=Array.isArray(d.products)?d.products:[];
+    ORDERS=Array.isArray(d.sample_orders)?d.sample_orders.map(String):[];
+  }catch(e){}
+  start();
+}
+boot();
 }
 </script>
 </body>
