@@ -86,9 +86,13 @@ async function waitIdle(page) {
   await waitIdle(page);
   ok(await page.locator('#log .msg.bot').count() === before - 1, 'stop removes the pending reply and frees the composer');
 
-  // WhatsApp tab and a handoff
+  // WhatsApp tab: its own chat, separate from the website chat
+  await page.fill('#q', 'draft for the website');
   await page.click('#tabWa');
   ok(await page.locator('#chatView.wamode .wahead').isVisible() && await page.locator('.wanote').isVisible(), 'WhatsApp tab shows its header and preview note');
+  ok(await page.locator('#log .msg.me').count() === 0 && await page.locator('#log .msg.bot').count() === 1, 'WhatsApp chat starts fresh: no website messages, only its welcome');
+  ok(await page.locator('#cartN').isHidden(), 'WhatsApp chat has its own empty cart');
+  ok(await page.inputValue('#q') === '', 'the website draft does not follow into WhatsApp');
   await sendText(page, 'أبغى أكلم موظف');
   bot = await lastBot(page);
   ok(await bot.locator('.ho').count() === 1 && /T-1001/.test(await bot.innerText()), 'handoff shows the ticket card with T-1001');
@@ -98,8 +102,26 @@ async function waitIdle(page) {
   ok(await ticket.count() === 1 && /T-1001/.test(await ticket.innerText()) && /واتساب/.test(await ticket.innerText()), 'ticket T-1001 from WhatsApp is in the staff inbox');
   ok(/العميل يبغى يكلم موظف/.test(await ticket.innerText()), 'ticket carries the summary for staff');
 
-  // language switch
+  // back on the website: its chat, cart and draft are still there, without the WhatsApp messages
   await page.click('#tabChat');
+  const webText = await page.locator('#log').innerText();
+  ok(await page.locator('#log .msg.me').count() === 5 && !/أبغى أكلم موظف/.test(webText), 'website chat is unchanged and has none of the WhatsApp messages');
+  ok(await page.locator('#cartN').innerText() === '1', 'website cart still holds its item');
+  ok(await page.inputValue('#q') === 'draft for the website', 'website draft is restored');
+  await page.fill('#q', '');
+
+  // both chats can wait for a reply at the same time
+  await page.fill('#q', 'MOCK_SLOW');
+  await page.click('#sendBtn');
+  await page.click('#tabWa');
+  ok(!(await page.isDisabled('#q')), 'while the website waits, the WhatsApp composer stays free');
+  await sendText(page, 'Do you ship to Turkey?');
+  ok(/Turkey/.test(await (await lastBot(page)).innerText()), 'WhatsApp gets its own reply meanwhile');
+  await page.click('#tabChat');
+  await waitIdle(page);
+  ok(/Happy to help/.test(await (await lastBot(page)).innerText()) && !/Turkey/.test(await page.locator('#log').innerText()), 'the slow website reply lands in the website chat only');
+
+  // language switch
   await page.click('#langBtn');
   ok(await page.getAttribute('html', 'dir') === 'ltr' && await page.getAttribute('html', 'lang') === 'en', 'language switch flips the page to English, left to right');
   ok(await page.locator('#name').innerText() === 'Ghaim Perfumes', 'store name is translated');

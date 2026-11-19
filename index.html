@@ -320,30 +320,38 @@ try{Object.assign(S,JSON.parse(localStorage.getItem('ghaim-demo')||'{}'))}catch(
 const saveS=()=>{try{localStorage.setItem('ghaim-demo',JSON.stringify(S))}catch(e){}};
 const t=k=>T[S.lang][k];
 
-let msgs=[],cart={},tickets=[],seq=0,busy=false,ctl=null,view='chat',chipsNow=null,sheetKind=null;
+let tickets=[],seq=0,view='chat',lastChat='web',sheetKind=null;
 let aiState='wait';
 const uid=()=>'m'+(++seq)+Date.now().toString(36);
-const welcome=()=>({id:'m0',role:'bot',welcome:true,steps:[],products:['p01','p04','p14'],time:Date.now()});
+const welcome=c=>({id:'w-'+c,role:'bot',welcome:true,steps:[],products:['p01','p04','p14'],time:Date.now()});
+// The website and WhatsApp chats are independent: each has its own messages, cart, quick
+// replies, draft and request. Staff tickets from both land in the one staff inbox.
+const CH={web:{},wa:{}};
+const resetChat=c=>Object.assign(CH[c],{msgs:[welcome(c)],cart:{},chips:null,draft:'',busy:false,ctl:null});
+resetChat('web');resetChat('wa');
+const chan=()=>view==='wa'?'wa':view==='chat'?'web':lastChat;
+const cur=()=>CH[chan()];
 const prod=id=>P.find(p=>p.id===id);
 const pname=id=>{const p=prod(id);return p?(S.lang==='ar'?p.ar:p.en):id};
 const clean=s=>String(s||'').replace(/\[\[[^\]]*\]\]/g,'').replace(/\[\[[^\]]*\]?$/,'').replace(/\[$/,'').replace(/[ \t]+$/gm,'').replace(/\n{3,}/g,'\n\n').trim();
 const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
 
-function addToCart(id,q){const p=prod(id);if(!p||p.stock<=0)return false;cart[id]=Math.min((cart[id]||0)+(q||1),p.stock);renderCartBadge();return true}
-function cartSummary(){const items=Object.entries(cart).map(([id,q])=>{const p=prod(id);return{id,name_ar:p.ar,name_en:p.en,qty:q,price_sar:p.price}});return{items,total_sar:items.reduce((s,i)=>s+i.qty*i.price_sar,0)}}
-function transcript(){return msgs.filter(m=>!m.welcome&&(m.role==='user'||clean(m.text))).map(m=>({who:m.role,text:m.role==='user'?m.text:clean(m.text)})).slice(-20)}
+function addToCart(id,q,c=chan()){const p=prod(id);if(!p||p.stock<=0)return false;const k=CH[c].cart;k[id]=Math.min((k[id]||0)+(q||1),p.stock);renderCartBadge();return true}
+function cartSummary(c=chan()){const items=Object.entries(CH[c].cart).map(([id,q])=>{const p=prod(id);return{id,name_ar:p.ar,name_en:p.en,qty:q,price_sar:p.price}});return{items,total_sar:items.reduce((s,i)=>s+i.qty*i.price_sar,0)}}
+function transcript(c=chan()){return CH[c].msgs.filter(m=>!m.welcome&&(m.role==='user'||clean(m.text))).map(m=>({who:m.role,text:m.role==='user'?m.text:clean(m.text)})).slice(-20)}
 function makeTicket(reason,summary,id,ch){
   const old=id&&tickets.find(x=>x.id===id);if(old)return old;
-  const tk={id:id||'T-'+(1001+tickets.length),time:new Date().toISOString(),ch:ch||(view==='wa'?'wa':'web'),reason:String(reason||'').slice(0,300),summary:String(summary||reason||'').slice(0,800),status:'waiting',transcript:transcript()};
+  ch=ch||chan();
+  const tk={id:id||'T-'+(1001+tickets.length),time:new Date().toISOString(),ch,reason:String(reason||'').slice(0,300),summary:String(summary||reason||'').slice(0,800),status:'waiting',transcript:transcript(ch)};
   tickets.push(tk);renderTabs();renderStaff();return tk;
 }
 
 const cap=(s,n)=>{const a=Array.from(s);return a.length>n?a.slice(0,n).join(''):s};
-function buildTurns(){
-  return msgs.filter(m=>!m.welcome&&!m.pending&&(m.role==='user'||String(m.text||'').trim())).slice(-16).map(m=>m.role==='user'?{role:'user',content:cap(String(m.text).trim(),1000)}:{role:'assistant',content:cap(String(m.text).trim(),2000)});
+function buildTurns(c){
+  return CH[c].msgs.filter(m=>!m.welcome&&!m.pending&&(m.role==='user'||String(m.text||'').trim())).slice(-16).map(m=>m.role==='user'?{role:'user',content:cap(String(m.text).trim(),1000)}:{role:'assistant',content:cap(String(m.text).trim(),2000)});
 }
 function chatBody(ch){
-  return{messages:buildTurns(),channel:ch,speed:S.speed==='smart'?'smart':'fast',cart:Object.entries(cart).map(([id,qty])=>({id,qty})),open_tickets:tickets.filter(x=>x.status==='waiting').map(x=>x.id),next_ticket_id:'T-'+(1001+tickets.length),wa_button:!!S.wa};
+  return{messages:buildTurns(ch),channel:ch,speed:S.speed==='smart'?'smart':'fast',cart:Object.entries(CH[ch].cart).map(([id,qty])=>({id,qty})),open_tickets:tickets.filter(x=>x.status==='waiting'&&x.ch===ch).map(x=>x.id),next_ticket_id:'T-'+(1001+tickets.length),wa_button:!!S.wa};
 }
 async function askServer(body,signal){
   let res,data=null;
@@ -361,7 +369,7 @@ function applyStep(s,r,bot,ch){
   const a=r.actions.find(x=>!x.used&&(s.k==='cart'?x.type==='add_to_cart'&&x.product_id===s.id:s.k==='hand'&&x.type==='handoff'&&x.ticket_id===s.id));
   if(!a)return;
   a.used=true;
-  if(a.type==='add_to_cart')addToCart(a.product_id,a.quantity);
+  if(a.type==='add_to_cart')addToCart(a.product_id,a.quantity,ch);
   else bot.handoff=makeTicket(a.reason,a.summary,a.ticket_id,ch).id;
 }
 function setAi(s){if(aiState!==s){aiState=s;renderStatus();renderSide()}}
@@ -371,19 +379,22 @@ async function checkHealth(){
 
 async function send(text){
   text=cap(String(text||'').trim(),1000);
-  if(!text||busy)return;
-  if(view==='staff')setView('chat');
-  $('#q').value='';
+  if(!text)return;
+  if(view==='staff')setView(lastChat==='wa'?'wa':'chat');
+  const ch=chan(),st=CH[ch];
+  if(st.busy)return;
+  $('#q').value='';st.draft='';
   const m={id:uid(),role:'user',text,time:Date.now()};
-  msgs.push(m);append(m);
-  setChips([]);
-  await generate();
+  st.msgs.push(m);append(m);
+  await generate(ch);
 }
-async function generate(){
-  const ch=view==='wa'?'wa':'web',body=chatBody(ch);
+// Composer and quick replies follow the chat on screen; a reply for the other chat waits there.
+function showChat(ch){if(view!=='staff'&&chan()===ch){setChips(CH[ch].chips);setComposer()}}
+async function generate(ch){
+  const st=CH[ch],body=chatBody(ch);
   const bot={id:uid(),role:'bot',text:'',steps:[],products:[],chips:[],pending:true,time:Date.now()};
-  msgs.push(bot);append(bot);
-  busy=true;const my=new AbortController();ctl=my;setComposer();setChips([]);
+  st.msgs.push(bot);if(view!=='staff'&&chan()===ch)append(bot);
+  st.busy=true;const my=new AbortController();st.ctl=my;st.chips=[];showChat(ch);
   let cancelled=false;
   try{
     const r=await askServer(body,my.signal);
@@ -391,11 +402,11 @@ async function generate(){
     if(r.refused)bot.err='refused';
     else{
       for(const s of r.steps){
-        const st=Object.assign({},s,{ok:false});
-        bot.steps.push(st);patch(bot);
+        const step=Object.assign({},s,{ok:false});
+        bot.steps.push(step);patch(bot);
         if(S.steps)await wait(250);
         if(my.signal.aborted)throw new Error('stopped');
-        st.ok=true;applyStep(st,r,bot,ch);patch(bot);
+        step.ok=true;applyStep(step,r,bot,ch);patch(bot);
       }
       bot.text=r.text;
       if(r.truncated)bot.err='cut';
@@ -409,29 +420,31 @@ async function generate(){
       if(bot.err==='paused')setAi('off');
     }
   }
-  if(ctl===my){busy=false;ctl=null}
-  if(!msgs.includes(bot))return;
+  if(st.ctl===my){st.busy=false;st.ctl=null}
+  if(!st.msgs.includes(bot))return;
   bot.steps=bot.steps.filter(s=>s.ok);
-  if(cancelled&&!clean(bot.text)&&!bot.handoff&&!bot.steps.length){msgs=msgs.filter(x=>x!==bot);const el=document.getElementById(bot.id);if(el)el.remove();setComposer();setChips(null);return}
-  finalize(bot);setComposer();
+  if(cancelled&&!clean(bot.text)&&!bot.handoff&&!bot.steps.length){st.msgs=st.msgs.filter(x=>x!==bot);const el=document.getElementById(bot.id);if(el)el.remove();st.chips=null;showChat(ch);return}
+  finalize(bot,ch);showChat(ch);
 }
-function finalize(m){
+function finalize(m,ch){
   m.pending=false;
   const raw=m.text||'';
   const ids=[];
   for(const x of raw.matchAll(/\[\[\s*(p\d{2})\s*\]\]/gi)){const id=x[1].toLowerCase();if(!ids.includes(id)&&prod(id))ids.push(id)}
   m.products=ids.slice(0,4);
-  const ch=raw.match(/\[\[\s*chips\s*:([^\]]*)\]\]/i);
-  m.chips=ch?ch[1].split('|').map(s=>s.trim()).filter(Boolean).slice(0,3):[];
-  if(m.handoff){const tk=tickets.find(x=>x.id===m.handoff);if(tk)tk.transcript=transcript()}
+  const cm=raw.match(/\[\[\s*chips\s*:([^\]]*)\]\]/i);
+  m.chips=cm?cm[1].split('|').map(s=>s.trim()).filter(Boolean).slice(0,3):[];
+  if(m.handoff){const tk=tickets.find(x=>x.id===m.handoff);if(tk)tk.transcript=transcript(ch)}
   patch(m);renderStaff();renderTabs();
-  setChips(m.chips.length?m.chips:null);
+  CH[ch].chips=m.chips.length?m.chips:null;
 }
 function retry(id){
-  if(busy)return;
-  msgs=msgs.filter(m=>m.id!==id);
+  const ch=Object.keys(CH).find(k=>CH[k].msgs.some(m=>m.id===id));
+  if(!ch||CH[ch].busy)return;
+  const st=CH[ch];
+  st.msgs=st.msgs.filter(m=>m.id!==id);
   const el=document.getElementById(id);if(el)el.remove();
-  if(msgs.length&&msgs[msgs.length-1].role==='user')generate();
+  if(st.msgs.length&&st.msgs[st.msgs.length-1].role==='user')generate(ch);
 }
 
 function filterText(f){
@@ -502,14 +515,13 @@ function nearBottom(){const l=$('#log');return l.scrollHeight-l.scrollTop-l.clie
 function toBottom(){const l=$('#log');l.scrollTop=l.scrollHeight}
 function append(m){const l=$('#log');l.insertAdjacentHTML('beforeend',msgHTML(m));const el=l.lastElementChild;if(el&&el.classList)el.classList.add('enter');toBottom()}
 function patch(m){const el=document.getElementById(m.id);if(!el)return;const nb=nearBottom();el.outerHTML=msgHTML(m);if(nb)toBottom()}
-function renderLog(){$('#log').innerHTML=(view==='wa'?'<div class="wanote">'+t('waPreview')+'</div>':'')+msgs.map(msgHTML).join('');toBottom()}
+function renderLog(){$('#log').innerHTML=(view==='wa'?'<div class="wanote">'+t('waPreview')+'</div>':'')+cur().msgs.map(msgHTML).join('');toBottom()}
 function setChips(list){
-  chipsNow=list;
   const arr=list==null?T[S.lang].starters:list;
   $('#chips').innerHTML=arr.map(c=>'<button type="button" class="chip" dir="auto">'+esc(c)+'</button>').join('');
 }
 function setComposer(){
-  const b=$('#sendBtn');b.innerHTML=busy?I.stop:I.send;b.setAttribute('aria-label',busy?t('stop'):t('send'));
+  const busy=cur().busy,b=$('#sendBtn');b.innerHTML=busy?I.stop:I.send;b.setAttribute('aria-label',busy?t('stop'):t('send'));
   $('#q').disabled=busy;
 }
 function renderStatus(){
@@ -520,7 +532,7 @@ function renderTabs(){
   const n=tickets.filter(x=>x.status==='waiting').length;
   $('#tabStaff').innerHTML=esc(t('staff'))+(n?'<span class="cnt">'+n+'</span>':'');
 }
-function renderCartBadge(){const n=Object.values(cart).reduce((a,b)=>a+b,0);const b=$('#cartN');b.textContent=n;b.hidden=!n}
+function renderCartBadge(){const n=Object.values(cur().cart).reduce((a,b)=>a+b,0);const b=$('#cartN');b.textContent=n;b.hidden=!n}
 function renderSide(){
   const L=T[S.lang],ic={search:I.search,order:I.order,cart:I.bag,staff:I.staff};
   $('#side').innerHTML='<h3>'+L.sideTitle+'</h3><p class="mut">'+L.sideLead+'</p>'+L.tools.map(x=>'<div class="tool">'+ic[x[0]]+'<div><b>'+x[1]+'</b><span>'+x[2]+'</span></div></div>').join('')+(ORDERS.length?'<h4>'+L.tryOrders+'</h4><div class="orders">'+ORDERS.map(n=>'<button type="button" class="chip" data-order="'+esc(n)+'">'+esc(n)+'</button>').join('')+'</div>':'')+'<p class="mut small">'+L.engine+' · '+(S.speed==='smart'?L.modeSmart:L.modeFast)+(aiState==='on'?' · '+L.toolsOn:'')+'</p>';
@@ -532,12 +544,15 @@ function renderStaff(){
   el.innerHTML='<h3 class="sh">'+t('staffTitle')+'</h3>'+tickets.slice().reverse().map(tk=>'<article class="tk"><header><span><bdi>'+esc(tk.id)+'</bdi> · <bdi>'+timeTxt(tk.time)+'</bdi></span><span class="pill'+(tk.status==='done'?' done':'')+'">'+(tk.status==='done'?t('resolved'):t('waiting'))+'</span></header><div class="ch">'+t('chLabel')+': '+(tk.ch==='wa'?t('chWa'):t('chWeb'))+'</div>'+(tk.reason?'<div><b>'+t('reason')+':</b> <span dir="auto">'+esc(tk.reason)+'</span></div>':'')+'<div><b>'+t('summary')+'</b><p dir="auto">'+esc(tk.summary)+'</p></div><details><summary>'+t('transcript')+' ('+tk.transcript.length+')</summary><div class="tr">'+tk.transcript.map(x=>'<div><b>'+(x.who==='user'?t('customer'):t('assistant'))+':</b> <span dir="auto">'+esc(x.text)+'</span></div>').join('')+'</div></details><button type="button" class="ghost" data-done="'+esc(tk.id)+'">'+(tk.status==='done'?t('reopen'):t('markDone'))+'</button></article>').join('');
 }
 function setView(v){
-  const was=view;view=v;
+  const was=view;
+  if(was!=='staff')cur().draft=$('#q').value;
+  view=v;
+  if(v!=='staff')lastChat=v==='wa'?'wa':'web';
   $('#chatView').hidden=v==='staff';$('#staffView').hidden=v!=='staff';
   $('#chatView').classList.toggle('wamode',v==='wa');
   $('#tabChat').setAttribute('aria-selected',String(v==='chat'));$('#tabWa').setAttribute('aria-selected',String(v==='wa'));$('#tabStaff').setAttribute('aria-selected',String(v==='staff'));
   if(v==='staff')renderStaff();
-  else if(was!==v)renderLog();
+  else if(was!==v){renderLog();$('#q').value=cur().draft;setChips(cur().chips);setComposer();renderCartBadge();if(sheetKind==='cart')renderSheet()}
 }
 function renderSheet(){
   const pn=$('#panel'),L=S.lang;
@@ -557,15 +572,15 @@ function applyLang(){
   $('#cartBtn').setAttribute('aria-label',t('cartAria'));$('#setBtn').setAttribute('aria-label',t('setAria'));
   $('#tabChat').textContent=t('chat');$('#tabWa').textContent=t('waTab');$('#note').textContent=t('note');$('#q').placeholder=t('ph');
   $('#waName').textContent=t('store');$('#waSub').textContent=t('waBiz');
-  renderStatus();renderTabs();renderLog();renderStaff();renderSide();setChips(chipsNow);renderCartBadge();setComposer();
+  renderStatus();renderTabs();renderLog();renderStaff();renderSide();setChips(cur().chips);renderCartBadge();setComposer();
 }
 function resetAll(){
-  if(ctl)ctl.abort();
-  busy=false;ctl=null;msgs=[welcome()];cart={};tickets=[];chipsNow=null;
+  for(const c of Object.keys(CH)){if(CH[c].ctl)CH[c].ctl.abort();resetChat(c)}
+  tickets=[];$('#q').value='';
   sheetKind=null;$('#sheet').classList.remove('open');setView('chat');applyLang();
 }
 
-$('#form').addEventListener('submit',e=>{e.preventDefault();if(busy){if(ctl)ctl.abort();return}send($('#q').value)});
+$('#form').addEventListener('submit',e=>{e.preventDefault();const st=cur();if(st.busy){if(st.ctl)st.ctl.abort();return}send($('#q').value)});
 $('#chips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)send(c.textContent)});
 $('#log').addEventListener('click',e=>{
   const a=e.target.closest('[data-add]');
@@ -582,7 +597,7 @@ $('#setBtn').addEventListener('click',()=>openSheet('settings'));
 $('#langBtn').addEventListener('click',()=>{S.lang=S.lang==='ar'?'en':'ar';saveS();applyLang()});
 $('#sheet').addEventListener('click',e=>{
   if(e.target===e.currentTarget||e.target.closest('[data-close]')){closeSheet();return}
-  const rm=e.target.closest('[data-rm]');if(rm){delete cart[rm.dataset.rm];renderCartBadge();renderSheet();return}
+  const rm=e.target.closest('[data-rm]');if(rm){delete cur().cart[rm.dataset.rm];renderCartBadge();renderSheet();return}
   const sp=e.target.closest('[data-speed]');if(sp){S.speed=sp.dataset.speed;saveS();renderSheet();renderSide();return}
   const st=e.target.closest('[data-steps]');if(st){S.steps=st.dataset.steps==='1';saveS();renderSheet();return}
   if(e.target.closest('[data-reset]'))resetAll();
@@ -591,7 +606,7 @@ $('#sheet').addEventListener('input',e=>{if(e.target.id==='waIn'){S.wa=digits(e.
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 
 function start(){
-  msgs=[welcome()];cart={};tickets=[];
+  resetChat('web');resetChat('wa');tickets=[];
   applyLang();
 }
 async function boot(){

@@ -12,7 +12,7 @@ An Arabic-first shopping assistant for a sample perfume store in Saudi Arabia. C
 - **adds products to the cart** when the customer asks;
 - **hands the chat to a person** for complaints, refunds, damaged items or payment problems, with a ready summary in the staff inbox.
 
-The same assistant runs in three tabs: the store **website**, a **WhatsApp preview** (shorter replies, WhatsApp look) and the **staff inbox** where handed-over chats arrive with a summary and the full conversation. The page switches between Arabic (right to left) and English.
+The same assistant runs in three tabs: the store **website**, a **WhatsApp preview** (shorter replies, WhatsApp look) and the **staff inbox** where handed-over chats arrive with a summary and the full conversation. The website and WhatsApp chats are independent, like two different customers: each has its own conversation, cart and quick replies, and each can wait for a reply while you use the other. Handovers from both land in the one staff inbox, marked with their channel. The page switches between Arabic (right to left) and English.
 
 | Website chat (desktop) | Staff inbox |
 | --- | --- |
@@ -37,7 +37,7 @@ flowchart LR
     C -- "text, actions, steps" --> B
 ```
 
-1. **The page** (`index.html`, one file with inline CSS and JS) keeps the chat, cart and staff tickets in the browser. Only the settings (language, reply speed, steps on or off, WhatsApp number) are saved, in `localStorage`. For each message it posts the last 16 turns with the channel, reply speed, cart, open tickets and the next ticket id to `api/chat.php`. The browser never sends prompt text and cannot pick a model.
+1. **The page** (`index.html`, one file with inline CSS and JS) keeps the website chat and the WhatsApp chat separately in the browser, each with its own cart, plus the staff tickets. Only the settings (language, reply speed, steps on or off, WhatsApp number) are saved, in `localStorage`. For each message it posts that chat's last 16 turns with the channel, reply speed, that chat's cart and open tickets, and the next ticket id to `api/chat.php`. The browser never sends prompt text and cannot pick a model.
 2. **`api/chat.php`** checks the Origin header and the request, counts the message against the limits, and builds the system prompt on the server in two blocks. The first one holds the instructions and store policies; it is cached together with the four tools. The second holds what changes per request: the channel, today's date in Saudi time, the cart and the open tickets.
 3. **The tool loop** calls the Claude Messages API with cURL. `search_products` and `get_order_status` are answered from the files in `data/`. `add_to_cart` and `handoff_to_staff` are checked on the server (the product exists and is in stock; one handover per reply, using the ticket id the page sent) and come back to the page as actions. A message gets at most 5 model calls; the last allowed call has to answer in text.
 4. **The reply** is `{text, actions, steps}`. While waiting, the page shows typing dots. It then shows the steps one by one (about 250 ms apart), applies the actions to the cart and the staff inbox, and renders the text with its product cards (`[[p01]]`) and quick replies (`[[chips: a | b]]`).
@@ -152,7 +152,7 @@ It runs `php -l` on every PHP file, starts the app and the mock Claude API with 
 - invalid input → 400, too many messages → 429, wrong Origin → 403, missing config or `enabled => false` → 503;
 - that the config is found above `public_html` with `open_basedir` set, that the usage log has no message text, and that the key never reaches a response.
 
-With Node and [Playwright](https://playwright.dev) installed it also runs `tests/browser-check.js`, which drives the page in headless Chromium. It checks for console errors, a reply with product cards, the cart badge, the WhatsApp tab, a ticket in the staff inbox, the language switch, the busy message with its retry button and the stop button.
+With Node and [Playwright](https://playwright.dev) installed it also runs `tests/browser-check.js`, which drives the page in headless Chromium. It checks for console errors, a reply with product cards, the cart badge, the WhatsApp tab, that the website and WhatsApp chats (and their carts) stay separate, a ticket in the staff inbox, the language switch, the busy message with its retry button and the stop button.
 
 ## Editing the store
 
