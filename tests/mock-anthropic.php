@@ -249,6 +249,20 @@ if (preg_match('/turkey|تركيا/iu', $customer)) {
         : "Yes, we ship to Turkey: delivery takes 6 to 10 working days and costs 95 SAR. Customs fees, if any, are paid by the customer.\n[[chips: Show me gift ideas | Payment options | Track my order]]", $model, $rounds);
 }
 
+if (preg_match('/مكسور|تالف|خربان|broken|damaged/iu', $customer)) {
+    preg_match('/\d{4}/', $customer, $num);
+    $order = $num[0] ?? '';
+    if ($rounds === 0) {
+        tool('handoff_to_staff', $ar
+            ? ['reason' => 'منتج تالف', 'summary' => 'العميل استلم الطلب ' . $order . ' والعلبة مكسورة، ويبغى استبدال أو استرجاع. يحتاج متابعة من فريق الخدمة.']
+            : ['reason' => 'Damaged item', 'summary' => 'The customer received order ' . $order . ' with a broken box and wants a replacement or a refund.'], $model, $rounds);
+    }
+    $ticket = $result()['data']['ticket_id'] ?? '?';
+    text($ar
+        ? "آسفين جداً على هذا! حوّلت طلبك لفريق خدمة العملاء برقم التذكرة {$ticket}، وبيتواصل معك أحد الموظفين خلال دقائق عشان يرتب لك الاستبدال أو الاسترجاع.\n[[chips: تمام، شكراً | وش سياسة الاسترجاع؟]]"
+        : "I'm really sorry about that! I've passed it to our customer care team (ticket $ticket); a team member will contact you within minutes to arrange a replacement or refund.\n[[chips: Thanks | Returns policy]]", $model, $rounds);
+}
+
 if (preg_match('/[0-9٠-٩۰-۹]{4}/u', $customer, $m)) {
     if ($rounds === 0) {
         // Arabic-Indic digits on purpose: the server has to normalise them
@@ -269,9 +283,12 @@ if (preg_match('/[0-9٠-٩۰-۹]{4}/u', $customer, $m)) {
             ? "تم شحن طلبك رقم {$o['order_number']} أمس، وهو الحين مع شركة الشحن. يوصلك خلال " . ($days === 2 ? 'يومين' : "$days أيام") . " إن شاء الله" . ($tracking ? "، ورقم التتبع $tracking." : '.') . "\n[[chips: وش طرق الدفع؟ | أبغى أضيف عطر | شكراً]]"
             : "Your order {$o['order_number']} shipped yesterday and is with the courier now. It should arrive in about $days days" . ($tracking ? "; the tracking number is $tracking." : '.') . "\n[[chips: Payment options | Add another perfume | Thanks]]", $model, $rounds);
     }
+    $statusAr = ['processing' => 'قيد التجهيز الحين، ويتم شحنه بكرة إن شاء الله', 'delivered' => 'تم تسليمه، وإذا فيه أي مشكلة بلغني وأحوّلك لفريق الخدمة', 'out_for_delivery' => 'مع المندوب اليوم، ويوصلك بين 4 و8 المساء إن شاء الله'];
+    $statusEn = ['processing' => 'is being prepared and ships tomorrow', 'delivered' => 'has been delivered; if anything is wrong, tell me and I will connect you with our team', 'out_for_delivery' => 'is out for delivery today, arriving between 4 and 8 pm'];
+    $st = (string) ($o['status'] ?? '');
     text($ar
-        ? "حالة طلبك رقم {$o['order_number']}: {$o['status']}.\n[[chips: شكراً | أبغى أكلم موظف]]"
-        : "Order {$o['order_number']} status: {$o['status']}.\n[[chips: Thanks | Talk to a person]]", $model, $rounds);
+        ? "طلبك رقم {$o['order_number']} " . ($statusAr[$st] ?? $st) . ".\n[[chips: شكراً | أبغى أكلم موظف]]"
+        : "Your order {$o['order_number']} " . ($statusEn[$st] ?? $st) . ".\n[[chips: Thanks | Talk to a person]]", $model, $rounds);
 }
 
 if (preg_match('/\badd\b|أضف|ضيف/iu', $customer)) {
