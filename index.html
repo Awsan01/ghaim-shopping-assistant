@@ -3,7 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ghaim shopping assistant</title>
+<title>عطور غَيم · مساعد التسوق الذكي</title>
+<meta name="description" content="مساعد تسوق ذكي يتحدث العربية لمتجر عطور سعودي تجريبي: يقترح العطور، ويتابع الطلبات، ويضيف إلى السلة، ويحوّل المحادثة إلى فريق الخدمة. An Arabic-first AI shopping assistant demo.">
+<meta name="theme-color" content="#5a1430">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://shop.awsankhaled.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="عطور غَيم">
+<meta property="og:title" content="عطور غَيم · مساعد التسوق الذكي">
+<meta property="og:description" content="جرّب مساعد تسوق ذكياً يتحدث العربية: يقترح العطور، ويتابع الطلبات، ويحوّل المحادثة إلى فريق الخدمة. Try an Arabic-first AI shopping assistant for a Saudi perfume store.">
+<meta property="og:url" content="https://shop.awsankhaled.com/">
+<meta property="og:image" content="https://shop.awsankhaled.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="محادثة مع مساعد عطور غَيم تعرض بطاقات عطور مقترحة">
+<meta property="og:locale" content="ar_SA">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
@@ -25,7 +41,7 @@ button,input{font:inherit;color:inherit}
 button{cursor:pointer;transition:background-color .18s,color .18s,box-shadow .18s,border-color .18s,transform .12s}
 button:active{transform:scale(.97)}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.app{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr)}
+.app{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}
 .top{background:var(--card);border-bottom:1px solid var(--line);padding:12px max(16px,4vw)}
 .bar,.tabs{max-width:1100px;margin:0 auto}
 .bar{display:flex;align-items:center;gap:8px}
@@ -102,7 +118,8 @@ main{min-height:0;width:100%;max-width:1100px;margin:0 auto;display:grid;grid-te
 .mut{color:var(--mut)}
 .wa{display:inline-flex;align-items:center;gap:8px;margin-top:10px;height:44px;padding:0 18px;border-radius:12px;background:#1d8a4b;color:#fff;text-decoration:none;font-weight:600}
 .wa svg{width:18px;height:18px}
-.composer{padding:6px max(16px,3vw) max(14px,env(safe-area-inset-bottom));background:var(--bg)}
+.composer{padding:6px max(16px,3vw) 8px;background:var(--bg)}
+.foot{margin:0;padding:2px 16px max(8px,env(safe-area-inset-bottom));text-align:center;font-size:12px;color:var(--mut)}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
 .chips:empty{display:none}
 .chip{flex:none;height:38px;padding:0 16px;border-radius:19px;border:1px solid var(--line);background:var(--card);font-size:14px;white-space:nowrap;animation:rise .3s ease both}
@@ -220,6 +237,7 @@ details summary{cursor:pointer;color:var(--mut);font-size:14px;min-height:32px;d
     </section>
     <aside class="side" id="side"></aside>
   </main>
+  <footer class="foot" dir="ltr">Built by Awsan Khaled</footer>
 </div>
 <div class="sheet" id="sheet"><div class="panel" id="panel" role="dialog" aria-modal="true"></div></div>
 <script>
@@ -243,7 +261,7 @@ const MARK='<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="15" y="3" width
 
 const arCount=c=>c===0?'لا نتائج':c===1?'نتيجة واحدة':c===2?'نتيجتان':c<=10?c+' نتائج':c+' نتيجة';
 const T={
-ar:{store:'عطور غَيم',role:'مساعد المتجر',online:'متصل الآن',connecting:'جارٍ الاتصال…',offline:'غير متاح الآن',
+ar:{store:'عطور غَيم',title:'عطور غَيم · مساعد التسوق الذكي',role:'مساعد المتجر',online:'متصل الآن',connecting:'جارٍ الاتصال…',offline:'غير متاح الآن',
 chat:'الموقع',waTab:'واتساب',staff:'فريق الخدمة',waBiz:'حساب تجاري',waPreview:'معاينة: هكذا يرد المساعد على رقم واتساب الخاص بالمتجر. نفس المساعد ونفس الأدوات، على قناة مختلفة.',waHere:'سيكمل معك أحد موظفينا هنا في واتساب خلال دقائق.',chLabel:'القناة',chWeb:'الموقع',chWa:'واتساب',note:'متجر تجريبي: المنتجات والطلبات أمثلة لعرض المساعد.',
 welcome:'حيّاك الله في عطور غَيم! أقدر أساعدك تختار العطر المناسب لذوقك وميزانيتك، أو أتابع طلبك، أو أوصلك بأحد موظفينا.',
 ph:'اكتب رسالتك…',send:'إرسال',stop:'إيقاف',retry:'إعادة المحاولة',add:'أضف للسلة',added:'تمت الإضافة',soldout:'نفدت الكمية',
@@ -268,7 +286,7 @@ starters:['أبغى عطر هدية لزوجتي، ميزانيتي 300 ريال
 err:{rate_limited:w=>'وصلت إلى الحد المسموح من الرسائل في هذا العرض التجريبي. حاول مرة أخرى بعد '+w+'.',site_limit:w=>'وصل العرض التجريبي إلى حدّه اليومي من الرسائل. حاول مرة أخرى بعد '+w+'.',busy:'الخدمة مشغولة الآن. حاول مرة أخرى بعد لحظات.',paused:'العرض التجريبي متوقف مؤقتاً. عُد إلينا لاحقاً.',network:'تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.',refused:'لا أستطيع المساعدة في هذا الطلب. أقدر أساعدك في العطور والطلبات.',too_large:'المحادثة طويلة جداً. ابدأ محادثة جديدة من الإعدادات.',bad_request:'تعذّر إرسال هذه الرسالة. ابدأ محادثة جديدة من الإعدادات.',other:'حدث خطأ غير متوقع. حاول مرة أخرى.'},
 wait:s=>{const m=Math.max(1,Math.ceil(s/60));if(m<60)return m===1?'دقيقة':m===2?'دقيقتين':m<=10?m+' دقائق':m+' دقيقة';const h=Math.ceil(m/60);return h===1?'ساعة':h===2?'ساعتين':h<=10?h+' ساعات':h+' ساعة'},
 cut:'انقطع الرد قبل اكتماله.',langBtn:'EN',langAria:'English',cartAria:'السلة',setAria:'الإعدادات'},
-en:{store:'Ghaim Perfumes',role:'Store assistant',online:'Online',connecting:'Connecting…',offline:'Unavailable right now',
+en:{store:'Ghaim Perfumes',title:'Ghaim Perfumes · AI shopping assistant',role:'Store assistant',online:'Online',connecting:'Connecting…',offline:'Unavailable right now',
 chat:'Website',waTab:'WhatsApp',staff:'Staff inbox',waBiz:'Business account',waPreview:'Preview: how the assistant replies on the store’s WhatsApp number. Same assistant, same tools, different channel.',waHere:'A team member will continue with you here on WhatsApp within minutes.',chLabel:'Channel',chWeb:'Website',chWa:'WhatsApp',note:'Demo store: products and orders are examples made for this assistant.',
 welcome:'Welcome to Ghaim Perfumes. I can help you choose a perfume for your taste and budget, track an order, or connect you with our team.',
 ph:'Type a message…',send:'Send',stop:'Stop',retry:'Try again',add:'Add to cart',added:'Added',soldout:'Sold out',
@@ -534,7 +552,7 @@ function openSheet(k){sheetKind=k;renderSheet();$('#sheet').classList.add('open'
 function closeSheet(){if(!sheetKind)return;sheetKind=null;$('#sheet').classList.remove('open');renderLog()}
 function applyLang(){
   const L=S.lang,root=document.documentElement;
-  root.lang=L;root.dir=L==='ar'?'rtl':'ltr';
+  root.lang=L;root.dir=L==='ar'?'rtl':'ltr';document.title=t('title');
   $('#name').textContent=t('store');$('#langBtn').textContent=t('langBtn');$('#langBtn').setAttribute('aria-label',t('langAria'));
   $('#cartBtn').setAttribute('aria-label',t('cartAria'));$('#setBtn').setAttribute('aria-label',t('setAria'));
   $('#tabChat').textContent=t('chat');$('#tabWa').textContent=t('waTab');$('#note').textContent=t('note');$('#q').placeholder=t('ph');
