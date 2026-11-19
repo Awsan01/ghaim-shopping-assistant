@@ -109,6 +109,11 @@ function ghaim_load_config(): ?array
     if ($file === null) {
         return null;
     }
+    // Re-check the file on every request, so an edit (say enabled => false) works at once
+    // even where OPcache does not watch file times.
+    if (function_exists('opcache_invalidate')) {
+        @opcache_invalidate($file, false);
+    }
     $loaded = (static fn(string $f): mixed => include $f)($file);
     if (!is_array($loaded)) {
         error_log('ghaim: the config file does not return an array: ' . $file);
