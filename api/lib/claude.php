@@ -8,8 +8,11 @@ if (!defined('GHAIM_API')) {
 }
 
 const GHAIM_API_VERSION = '2026-10-21';
-// Low effort keeps thinking short, so the 700-token budget goes to the reply.
-const GHAIM_EFFORT = 'low';
+// Effort per reply speed. The fast model (Haiku) thinks briefly before it answers, which
+// keeps its Arabic grammar right; the smart model (Sonnet) writes well at low effort.
+const GHAIM_EFFORT = ['fast' => 'medium', 'smart' => 'low'];
+// Tokens added to max_tokens for that thinking, so the reply keeps its full budget.
+const GHAIM_THINKING_ROOM = ['fast' => 400, 'smart' => 0];
 // Seconds one customer message may spend on model calls, retries included.
 const GHAIM_TIME_BUDGET = 90;
 
@@ -45,11 +48,11 @@ function ghaim_chat(array $cfg, string $model, array $req, array $store, array &
     for ($call = 1; $call <= GHAIM_MAX_CALLS; $call++) {
         $payload = [
             'model' => $model,
-            'max_tokens' => $cfg['max_tokens'],
+            'max_tokens' => $cfg['max_tokens'] + GHAIM_THINKING_ROOM[$req['speed']],
             'system' => $system,
             'tools' => $tools,
             'messages' => $messages,
-            'output_config' => ['effort' => GHAIM_EFFORT],
+            'output_config' => ['effort' => GHAIM_EFFORT[$req['speed']]],
             // Automatic caching of the conversation so far; the tools and the first system block
             // have their own breakpoint above.
             'cache_control' => ['type' => 'ephemeral'],
