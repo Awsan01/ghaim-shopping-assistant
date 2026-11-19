@@ -1,14 +1,11 @@
-# Ghaim Perfumes (عطور غَيم) · AI shopping assistant demo
-
-مساعد تسوق ذكي يتحدث العربية لمتجر عطور سعودي تجريبي: يقترح العطور المناسبة، ويتابع الطلبات، ويضيف إلى السلة، ويحوّل المحادثة إلى فريق الخدمة.
-يعمل على Claude عبر خادم PHP صغير يحفظ المفتاح بعيداً عن المتصفح، مع معاينة لقناة واتساب وصندوق لفريق خدمة العملاء.
+# Ghaim Perfumes · AI shopping assistant demo
 
 **Live demo: [shop.awsankhaled.com](https://shop.awsankhaled.com)**
 
 An Arabic-first shopping assistant for a sample perfume store in Saudi Arabia. Customers chat in Gulf Arabic, Modern Standard Arabic or English, and the assistant:
 
 - **recommends perfumes** by taste, budget, occasion and who they are for, shown as product cards with an add-to-cart button;
-- **tracks orders** (try 1042 to 1046), including numbers typed with Arabic digits (١٠٤٢);
+- **tracks orders** (try 1042 to 1046), including numbers typed in Arabic-Indic digits;
 - **adds products to the cart** when the customer asks;
 - **hands the chat to a person** for complaints, refunds, damaged items or payment problems, with a ready summary in the staff inbox.
 
