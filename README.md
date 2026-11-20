@@ -23,17 +23,6 @@ The same assistant runs in three tabs: the store **website**, a **WhatsApp previ
 
 ## How it works
 
-```mermaid
-flowchart LR
-    B["Browser<br/>index.html"] -- "POST api/chat.php<br/>last 16 turns, channel, cart, tickets" --> C["api/chat.php<br/>checks, limits, system prompt"]
-    C -- "Messages API<br/>prompt + 4 tools" --> A["Claude"]
-    A -- "tool_use" --> C
-    C -- "search_products<br/>get_order_status" --> D[("data/products.json<br/>data/orders.json")]
-    C -- "tool_result<br/>(up to 5 model calls)" --> A
-    A -- "final reply" --> C
-    C -- "text, actions, steps" --> B
-```
-
 1. **The page** (`index.html`, one file with inline CSS and JS) keeps the website chat and the WhatsApp chat separately in the browser, each with its own cart, plus the staff tickets. Only the settings (language, reply speed, steps on or off, WhatsApp number) are saved, in `localStorage`. For each message it posts that chat's last 16 turns with the channel, reply speed, that chat's cart and open tickets, and the next ticket id to `api/chat.php`. The browser never sends prompt text and cannot pick a model.
 2. **`api/chat.php`** checks the Origin header and the request, counts the message against the limits, and builds the system prompt on the server in two blocks. The first one holds the instructions and store policies; it is cached together with the four tools. The second holds what changes per request: the channel, today's date in Saudi time, the cart and the open tickets.
 3. **The tool loop** calls the Claude Messages API with cURL. `search_products` and `get_order_status` are answered from the files in `data/`. `add_to_cart` and `handoff_to_staff` are checked on the server (the product exists and is in stock; one handover per reply, using the ticket id the page sent) and come back to the page as actions. A message gets at most 5 model calls; the last allowed call has to answer in text.
