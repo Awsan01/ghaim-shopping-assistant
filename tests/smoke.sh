@@ -106,12 +106,13 @@ while IFS= read -r f; do
 done < <(find . -name '*.php' -not -path './.git/*' | sort)
 
 echo "== store data"
-check "products.json and orders.json are valid and orders only use known products" \
+check "products.json and orders.json are valid, orders use known products, every product photo exists" \
   "php -r '\$p = json_decode(file_get_contents(\"data/products.json\"), true, 64, JSON_THROW_ON_ERROR);
     \$o = json_decode(file_get_contents(\"data/orders.json\"), true, 64, JSON_THROW_ON_ERROR);
     \$ids = array_column(\$p[\"products\"], \"id\");
     foreach (\$o as \$order) foreach (\$order[\"items\"] as \$i) if (!in_array(\$i[0], \$ids, true)) exit(1);
-    foreach (\$p[\"sample_orders\"] as \$n) if (!isset(\$o[\$n])) exit(1);'"
+    foreach (\$p[\"sample_orders\"] as \$n) if (!isset(\$o[\$n])) exit(1);
+    foreach (\$p[\"products\"] as \$x) if (isset(\$x[\"img\"]) && !is_file(\$x[\"img\"])) exit(1);'"
 
 echo "== servers"
 write_config ""

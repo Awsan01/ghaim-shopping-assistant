@@ -36,7 +36,9 @@ The same assistant runs in three tabs: the store **website**, a **WhatsApp previ
 .
 ├── index.html              the whole front end: HTML, CSS and JS in one file
 ├── favicon.svg
-├── assets/og-image.png     link preview image (Open Graph)
+├── assets/
+│   ├── og-image.png        link preview image (Open Graph)
+│   └── products/           product photos (600x400 WebP) and their credits
 ├── data/
 │   ├── products.json       catalogue: products, scent families, audiences, occasions (public)
 │   └── orders.json         sample orders, read only by the server (blocked from the web)
@@ -138,7 +140,7 @@ It runs `php -l` on every PHP file, starts the app and the mock Claude API with 
 - invalid input → 400, too many messages → 429, wrong Origin → 403, missing config or `enabled => false` → 503;
 - that the config is found above `public_html` with `open_basedir` set, that the usage log has no message text, and that the key never reaches a response.
 
-With Node and [Playwright](https://playwright.dev) installed it also runs `tests/browser-check.js`, which drives the page in headless Chromium. It checks for console errors, a reply with product cards, the cart badge, the WhatsApp tab, that the website and WhatsApp chats (and their carts) stay separate, a ticket in the staff inbox, the language switch, the busy message with its retry button and the stop button.
+With Node and [Playwright](https://playwright.dev) installed it also runs `tests/browser-check.js`, which drives the page in headless Chromium. It checks for console errors, that the product photos load, a reply with product cards, the cart badge, the WhatsApp tab, that the website and WhatsApp chats (and their carts) stay separate, a ticket in the staff inbox, the language switch, the busy message with its retry button and the stop button.
 
 ## Editing the store
 
@@ -152,9 +154,12 @@ With Node and [Playwright](https://playwright.dev) installed it also runs `tests
   - `hours`: how long it lasts, `[8, 10]`, or `null`.
   - `stock`: `0` shows "sold out", 5 or less shows "only N left".
   - `tags`: occasions, keys of `occasions`.
-- `families`: Arabic and English names, plus the two bottle colours (`c`) and bottle shape (`s`, 0 to 3) used for the card picture.
+  - `img`: the card photo, for example `assets/products/p16.webp`. Use a 3:2 picture; 600x400 WebP keeps the page light. Without `img`, the card shows a drawn bottle instead.
+- `families`: Arabic and English names, plus the two bottle colours (`c`) and bottle shape (`s`, 0 to 3) used for the drawn bottle.
 - `who` and `occasions`: labels in both languages. Their keys are also the values the search tool offers Claude.
 - `sample_orders`: the order numbers shown as "Order numbers to try" on the page.
+
+**Photos: `assets/products/`.** Real photographs under CC0 (public domain), found through Openverse, with no brand names or logos; Ghaim and its products are fictional. Sources are listed in [`assets/products/CREDITS.md`](assets/products/CREDITS.md); add a line there when you add a photo.
 
 **Orders: `data/orders.json`.** One entry per order number, for example `"1042"`.
 
@@ -165,7 +170,7 @@ With Node and [Playwright](https://playwright.dev) installed it also runs `tests
 
 **Policies and instructions: `api/lib/prompt.php`.** Shipping, payment, returns, gift wrapping and opening hours are in `GHAIM_POLICIES` at the top of the file. The rest of the assistant's instructions are in `ghaim_static_prompt()` just below.
 
-After editing, run `tests/smoke.sh`: it also checks that the JSON is valid and that every order uses known products.
+After editing, run `tests/smoke.sh`: it also checks that the JSON is valid, that every order uses known products and that every product photo exists.
 
 ## Models and costs
 

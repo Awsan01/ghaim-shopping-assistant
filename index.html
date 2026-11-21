@@ -96,9 +96,11 @@ main{min-height:0;width:100%;max-width:1100px;margin:0 auto;display:grid;grid-te
 .cards{display:flex;gap:12px;overflow-x:auto;padding:12px 4px 10px;scroll-snap-type:x mandatory;scrollbar-width:none}
 .pc{flex:none;width:204px;scroll-snap-align:start;background:var(--card);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--sh);transition:transform .22s ease,box-shadow .22s ease}
 .pc:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(43,17,25,.06),0 12px 28px rgba(43,17,25,.1)}
-.ph{height:136px;display:grid;place-items:center;background:var(--c)}
+.ph{height:136px;display:grid;place-items:center;background:var(--c);overflow:hidden}
 .ph svg{height:112px;width:76px;transition:transform .3s ease}
 .pc:hover .ph svg{transform:translateY(-2px) rotate(-2deg)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+.pc:hover .ph img{transform:scale(1.04)}
 .pb{padding:12px 14px 14px;display:flex;flex-direction:column;gap:3px;flex:1}
 .pb h4{margin:0;font-size:15px;line-height:1.35}
 .fam{font-size:12px;color:var(--goldink);font-weight:600}
@@ -491,7 +493,7 @@ function cardHTML(id,mid){
   const L=S.lang,f=FAM[p.fam];
   const meta=[p.sz?p.sz[0]+' '+T[L].unit[p.sz[1]]:'',p.hours?T[L].lasts(p.hours[0],p.hours[1]):''].filter(Boolean).join(' · ');
   const sk=p.stock===0?'<span class="sk out">'+t('out')+'</span>':p.stock<=5?'<span class="sk low">'+T[L].low(p.stock)+'</span>':'<span class="sk">'+t('inStock')+'</span>';
-  return '<div class="pc" style="--c:'+rgba(f.c[1],.16)+'"><div class="ph">'+art(p,mid+p.id)+'</div><div class="pb"><span class="fam">'+f[L]+'</span><h4>'+esc(L==='ar'?p.ar:p.en)+'</h4><div class="nt">'+esc(L==='ar'?p.notes_ar:p.notes_en)+'</div>'+(meta?'<div class="mt">'+meta+'</div>':'')+'<div class="pr"><span class="price">'+p.price+' '+t('sar')+'</span>'+sk+'</div><button type="button" class="add" data-add="'+p.id+'"'+(p.stock===0?' disabled':'')+'>'+(p.stock===0?t('soldout'):t('add'))+'</button></div></div>';
+  return '<div class="pc" style="--c:'+rgba(f.c[1],.16)+'"><div class="ph">'+(p.img?'<img src="'+esc(p.img)+'" alt="'+esc(L==='ar'?p.ar:p.en)+'" width="600" height="400" loading="lazy" decoding="async">':art(p,mid+p.id))+'</div><div class="pb"><span class="fam">'+f[L]+'</span><h4>'+esc(L==='ar'?p.ar:p.en)+'</h4><div class="nt">'+esc(L==='ar'?p.notes_ar:p.notes_en)+'</div>'+(meta?'<div class="mt">'+meta+'</div>':'')+'<div class="pr"><span class="price">'+p.price+' '+t('sar')+'</span>'+sk+'</div><button type="button" class="add" data-add="'+p.id+'"'+(p.stock===0?' disabled':'')+'>'+(p.stock===0?t('soldout'):t('add'))+'</button></div></div>';
 }
 function hoHTML(id){
   const tk=tickets.find(x=>x.id===id);if(!tk)return '';

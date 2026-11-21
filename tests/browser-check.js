@@ -42,6 +42,8 @@ async function waitIdle(page) {
   await page.waitForFunction(() => document.querySelector('#dot').classList.contains('on'), null, { timeout: 5000 });
   ok(await page.locator('#dot.on').count() === 1, 'status dot is green after the health check');
   ok(await page.locator('#log .msg.bot').first().locator('.pc').count() === 3, 'welcome message shows 3 product cards');
+  await page.waitForFunction(() => { const imgs = [...document.querySelectorAll('#log .msg.bot .pc img')].slice(0, 3); return imgs.length === 3 && imgs.every(i => i.complete && i.naturalWidth > 0); }, null, { timeout: 5000 }).catch(() => {});
+  ok(await page.evaluate(() => { const imgs = [...document.querySelectorAll('#log .msg.bot .pc img')].slice(0, 3); return imgs.length === 3 && imgs.every(i => i.complete && i.naturalWidth > 0); }), 'product cards show their photos');
   ok(await page.getAttribute('html', 'dir') === 'rtl', 'page starts in Arabic, right to left');
 
   await page.locator('#chips .chip').first().click();   // the gift starter
