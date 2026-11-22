@@ -14,7 +14,7 @@ const GHAIM_DEFAULTS = [
         'fast' => 'claude-haiku-5-5',
         'smart' => 'claude-sonnet-5-5',
     ],
-    'max_tokens' => 700,
+    'max_tokens' => 4096,
     'enabled' => true,
     'limits' => [
         'ip_per_hour' => 30,
@@ -157,7 +157,7 @@ function ghaim_ready_config(): ?array
     $cfg['anthropic_api_key'] = $key;
     $cfg['workspace_id'] = $workspace;
     $cfg['anthropic_base_url'] = rtrim(trim($cfg['anthropic_base_url']), '/');
-    $cfg['max_tokens'] = is_numeric($cfg['max_tokens']) ? max(64, min(4096, (int) $cfg['max_tokens'])) : 700;
+    $cfg['max_tokens'] = is_numeric($cfg['max_tokens']) ? max(64, min(4096, (int) $cfg['max_tokens'])) : 4096;
     $limits = is_array($cfg['limits']) ? $cfg['limits'] : [];
     $cfg['limits'] = [];
     foreach (GHAIM_DEFAULTS['limits'] as $name => $default) {

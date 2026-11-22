@@ -8,8 +8,9 @@ if (!defined('GHAIM_API')) {
 }
 
 const GHAIM_API_VERSION = '2026-10-21';
-// Low effort keeps replies fast: the models skip thinking on most simple requests, so the
-// 700-token budget goes to the reply. (Medium made the fast model noticeably slower.)
+// Low effort keeps replies fast: the models think little, or not at all, on simple requests.
+// (Medium made the fast model noticeably slower.) Thinking is on by default on these models
+// and counts toward max_tokens, which is why the config leaves it room (4096 by default).
 const GHAIM_EFFORT = 'low';
 // Seconds one customer message may spend on model calls, retries included.
 const GHAIM_TIME_BUDGET = 90;

@@ -22,8 +22,11 @@ return [
         'smart' => 'claude-sonnet-5-5',
     ],
 
-    // Most tokens a single model reply may use.
-    'max_tokens' => 700,
+    // Most tokens one model call may produce, thinking included. Both models think before
+    // answering (on by default) and that counts toward this cap, so keep room for it: replies
+    // are short anyway, and only the tokens actually generated are billed. Much lower values
+    // cut replies off ("the reply was cut off"), mostly in longer chats.
+    'max_tokens' => 4096,
 
     // false pauses the demo: every API call answers 503 "demo paused". Claude is not called.
     'enabled' => true,

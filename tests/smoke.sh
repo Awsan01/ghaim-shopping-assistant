@@ -143,9 +143,9 @@ check "recommendation: tools and the static prompt are cached; per-request part 
      exit((\$r[\"system\"][0][\"cache_control\"][\"type\"] === \"ephemeral\" && !isset(\$r[\"system\"][1][\"cache_control\"])
        && (\$r[\"cache_control\"][\"type\"] ?? \"\") === \"ephemeral\" && str_contains(\$r[\"system\"][1][\"text\"], \"on the store website\")
        && !str_contains(\$r[\"system\"][0][\"text\"], \"Today is\") && str_contains(\$r[\"system\"][1][\"text\"], \"Today is \" . (new DateTime(\"now\", new DateTimeZone(\"Asia/Riyadh\")))->format(\"D M d Y\"))) ? 0 : 1);"'
-check "recommendation: fast = claude-haiku-5-5 at low effort, max_tokens 700, key sent" \
+check "recommendation: fast = claude-haiku-5-5 at low effort, max_tokens 4096 (room for thinking), key sent" \
   'last_mock | php -r "\$l = json_decode(stream_get_contents(STDIN), true); \$r = \$l[\"body\"];
-     exit((\$l[\"key_sent\"] && \$l[\"version\"] === \"2026-10-21\" && \$r[\"model\"] === \"claude-haiku-5-5\" && \$r[\"max_tokens\"] === 700 && \$r[\"output_config\"][\"effort\"] === \"low\") ? 0 : 1);"'
+     exit((\$l[\"key_sent\"] && \$l[\"version\"] === \"2026-10-21\" && \$r[\"model\"] === \"claude-haiku-5-5\" && \$r[\"max_tokens\"] === 4096 && \$r[\"output_config\"][\"effort\"] === \"low\") ? 0 : 1);"'
 check "recommendation: the cached prompt has the Arabic grammar rule, its examples and the masculine default for the customer" \
   'last_mock | php -r "\$s = json_decode(stream_get_contents(STDIN), true)[\"body\"][\"system\"][0][\"text\"];
      exit((str_contains(\$s, \"Arabic grammar: make every pronoun\") && str_contains(\$s, \"تحب ريحته تكون زهرية ناعمة\")
@@ -165,10 +165,10 @@ check "order 1042: Arabic-Indic digits from the model were normalised; dates are
      \$t = new DateTimeImmutable(\"today\", new DateTimeZone(\"Asia/Riyadh\"));
      exit((\$res[\"found\"] === true && \$res[\"order_number\"] === \"1042\" && \$res[\"expected_delivery\"] === \$t->modify(\"+2 days\")->format(\"Y-m-d\")
        && \$res[\"shipped_on\"] === \$t->modify(\"-1 day\")->format(\"Y-m-d\") && \$res[\"total_sar\"] === 289) ? 0 : 1);"'
-check "order 1042: smart = claude-sonnet-5-5 at low effort, max_tokens 700; WhatsApp channel, cart and open tickets are in the prompt" \
+check "order 1042: smart = claude-sonnet-5-5 at low effort, max_tokens 4096; WhatsApp channel, cart and open tickets are in the prompt" \
   'last_mock | php -r "\$r = json_decode(stream_get_contents(STDIN), true)[\"body\"]; \$s = \$r[\"system\"][1][\"text\"];
      exit((\$r[\"model\"] === \"claude-sonnet-5-5\" && str_contains(\$s, \"WhatsApp Business number\") && str_contains(\$s, \"Cart: Silk Musk x2 (total 398 SAR).\")
-       && str_contains(\$s, \"Open staff tickets: T-1001.\") && \$r[\"output_config\"][\"effort\"] === \"low\" && \$r[\"max_tokens\"] === 700) ? 0 : 1);"'
+       && str_contains(\$s, \"Open staff tickets: T-1001.\") && \$r[\"output_config\"][\"effort\"] === \"low\" && \$r[\"max_tokens\"] === 4096) ? 0 : 1);"'
 
 status=$(chat 'أضف ورد الطائف للسلة' web fast '[{"id":"p01","qty":1}]')
 check_json "add to cart: action and step for p01 (model sent \" P01 \")" \

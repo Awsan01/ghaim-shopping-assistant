@@ -185,7 +185,7 @@ The models are set in the private config. The browser only says `fast` or `smart
 What drives the cost:
 
 - **Calls per message.** Each message takes 1 to 5 model calls: a tool round (search, order lookup, cart, handover) adds a call. A typical recommendation takes two.
-- **Reply size.** `max_tokens` is 700 per call, and both models run at low effort, so the budget goes to the reply rather than long thinking, and replies stay fast.
+- **Reply size.** Both models think briefly before answering (on by default, kept short by low effort), and the thinking counts toward `max_tokens`. So `max_tokens` is 4096 per call: room for the thinking plus the reply. Replies stay short because the instructions ask for 1 to 3 sentences, and only the tokens actually generated are billed.
 - **Caching.** The tools and the fixed instructions (about 2,000 tokens) are cached with prompt caching. Later calls within 5 minutes read them from the cache at a fraction of the input price. The conversation is cached automatically during the tool loop.
 - **Limits.** Per visitor IP: 30 messages per hour and 100 per day. Whole site: 500 messages per day. So the daily worst case is 500 messages × 5 calls.
 
@@ -217,6 +217,7 @@ Prices change, so this README does not list them. See Anthropic's [pricing page]
   The server's PHP error log has a line starting with `ghaim:` that names the cause.
 - **"The service is busy".** The Claude API was overloaded or rate limited, even after one retry. Visitors can press "Try again".
 - **"The demo is paused" though `enabled` is true.** The API reported no credit, a reached spend limit, or an invalid key. Check the Claude Console.
+- **"The reply was cut off" (انقطع الرد قبل اكتماله).** The model reached `max_tokens` in one call; its thinking counts toward that cap. Keep `max_tokens` at 4096 (the default) in the private config; a config copied from an older example may still say 700. The usage log marks these replies `truncated`.
 
 ---
 
