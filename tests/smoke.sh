@@ -146,9 +146,11 @@ check "recommendation: tools and the static prompt are cached; per-request part 
 check "recommendation: fast = claude-haiku-5-5 at low effort, max_tokens 700, key sent" \
   'last_mock | php -r "\$l = json_decode(stream_get_contents(STDIN), true); \$r = \$l[\"body\"];
      exit((\$l[\"key_sent\"] && \$l[\"version\"] === \"2026-10-21\" && \$r[\"model\"] === \"claude-haiku-5-5\" && \$r[\"max_tokens\"] === 700 && \$r[\"output_config\"][\"effort\"] === \"low\") ? 0 : 1);"'
-check "recommendation: the cached prompt has the Arabic grammar rule and its examples" \
+check "recommendation: the cached prompt has the Arabic grammar rule, its examples and the masculine default for the customer" \
   'last_mock | php -r "\$s = json_decode(stream_get_contents(STDIN), true)[\"body\"][\"system\"][0][\"text\"];
-     exit((str_contains(\$s, \"Arabic grammar: make every pronoun\") && str_contains(\$s, \"تحب ريحته تكون زهرية ناعمة\")) ? 0 : 1);"'
+     exit((str_contains(\$s, \"Arabic grammar: make every pronoun\") && str_contains(\$s, \"تحب ريحته تكون زهرية ناعمة\")
+       && str_contains(\$s, \"Address the customer in the masculine, the general form in Arabic, and keep it for the whole chat\")
+       && str_contains(\$s, \"«أنا بنت»\") && !str_contains(\$s, \"unless they write in the feminine\")) ? 0 : 1);"'
 check "recommendation: the cached prompt has the selling rules (no repeats, honest when nothing else fits)" \
   'last_mock | php -r "\$s = json_decode(stream_get_contents(STDIN), true)[\"body\"][\"system\"][0][\"text\"];
      exit((str_contains(\$s, \"Sell like an experienced perfume seller\") && str_contains(\$s, \"Never offer a product twice as a new choice\")
