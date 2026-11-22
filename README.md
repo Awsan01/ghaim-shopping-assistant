@@ -147,14 +147,14 @@ With Node and [Playwright](https://playwright.dev) installed it also runs `tests
 **Products: `data/products.json`.** The page and the server both read this file.
 
 - `products`: one entry per product.
-  - `id`: `p` plus two digits, like `p16`; the reply marker `[[p16]]` uses it.
+  - `id`: `p` plus two digits, like `p20`; the reply marker `[[p20]]` uses it.
   - `ar` and `en`: names; `notes_ar` and `notes_en`: scent notes.
   - `fam`: a key of `families`; `for`: `women`, `men` or `unisex`.
   - `sz`: `[100, "ml"]`, `[50, "g"]` or `null`; `price`: in SAR.
   - `hours`: how long it lasts, `[8, 10]`, or `null`.
   - `stock`: `0` shows "sold out", 5 or less shows "only N left".
   - `tags`: occasions, keys of `occasions`.
-  - `img`: the card photo, for example `assets/products/p16.webp`. Use a 3:2 picture; 600x400 WebP keeps the page light. Without `img`, the card shows a drawn bottle instead.
+  - `img`: the card photo, for example `assets/products/p20.webp`. Use a 3:2 picture; 600x400 WebP keeps the page light. Without `img`, the card shows a drawn bottle instead.
 - `families`: Arabic and English names, plus the two bottle colours (`c`) and bottle shape (`s`, 0 to 3) used for the drawn bottle.
 - `who` and `occasions`: labels in both languages. Their keys are also the values the search tool offers Claude.
 - `sample_orders`: the order numbers shown as "Order numbers to try" on the page.
@@ -170,7 +170,7 @@ With Node and [Playwright](https://playwright.dev) installed it also runs `tests
 
 **Policies and instructions: `api/lib/prompt.php`.** Shipping, payment, returns, gift wrapping and opening hours are in `GHAIM_POLICIES` at the top of the file. The rest of the assistant's instructions are in `ghaim_static_prompt()` just below.
 
-After editing, run `tests/smoke.sh`: it also checks that the JSON is valid, that every order uses known products and that every product photo exists.
+After editing, run `tests/smoke.sh`: it also checks that the JSON is valid, that every order uses known products, that every product photo exists, and that oriental and oud perfumes are still on offer within 300 SAR (a common budget, and a common question).
 
 ## Models and costs
 

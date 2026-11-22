@@ -7,6 +7,8 @@ They were found through [Openverse](https://openverse.org) and saved as 600x400 
 of the card picture).
 
 Ghaim Perfumes and its products are fictional; the photos only illustrate them.
+The bottles for p16 to p19 are 19th-century glass cologne bottles from a museum collection, recoloured
+from blue to warm tones.
 
 | File | Product | Source | Licence | Changes |
 | --- | --- | --- | --- | --- |
@@ -25,3 +27,7 @@ Ghaim Perfumes and its products are fictional; the photos only illustrate them.
 | `p13.webp` | Ghaim Bakhoor | [Free burning incense stick image](https://www.rawpixel.com/image/5917370/image-public-domain-smoke-free), rawpixel | CC0 1.0 | cropped |
 | `p14.webp` | Ghaim Gift Set | [Gift Box](https://stocksnap.io/photo/gift-box-YZOCM3TBYT) by Altered Reality, stocksnap | CC0 1.0 | cropped |
 | `p15.webp` | Tobacco & Dates | [Untitled](https://www.rawpixel.com/image/5934342/photo-image-fashion-gift-white), rawpixel | CC0 1.0 | liquid recoloured cognac, mirrored, padded to 3:2 |
+| `p16.webp` | Saffron Rose | [Cologne bottle, cruet and stopper](https://www.rawpixel.com/image/9788549/cologne-bottle-cruet-and-stopper-c-1820-c-1840-maker-unknown), rawpixel | CC0 1.0 | blue glass recoloured ruby, cropped, background extended to 3:2 |
+| `p17.webp` | Amber Musk | [Cologne bottle, cruet and stopper](https://www.rawpixel.com/image/9788434/photo-image-public-domain-glass-sandwich), rawpixel | CC0 1.0 | blue glass recoloured amber, cropped, background extended to 3:2 |
+| `p18.webp` | Coffee & Cardamom | [Cologne bottle, cruet and stopper](https://www.rawpixel.com/image/9788600/cologne-bottle-cruet-and-stopper-c-1820-c-1840-maker-unknown), rawpixel | CC0 1.0 | blue glass recoloured coffee brown, cropped, background extended to 3:2 |
+| `p19.webp` | Soft Oud | [Cologne bottle, cruet and stopper](https://www.rawpixel.com/image/9788510/cologne-bottle-cruet-and-stopper-c-1820-c-1840-maker-unknown), rawpixel | CC0 1.0 | blue glass recoloured dark amber, cropped, background extended to 3:2 |

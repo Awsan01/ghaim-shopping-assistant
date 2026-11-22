@@ -113,6 +113,12 @@ check "products.json and orders.json are valid, orders use known products, every
     foreach (\$o as \$order) foreach (\$order[\"items\"] as \$i) if (!in_array(\$i[0], \$ids, true)) exit(1);
     foreach (\$p[\"sample_orders\"] as \$n) if (!isset(\$o[\$n])) exit(1);
     foreach (\$p[\"products\"] as \$x) if (isset(\$x[\"img\"]) && !is_file(\$x[\"img\"])) exit(1);'"
+check "oriental and oud perfumes are on offer within 300 SAR (women, men and oud found without relaxing the search)" \
+  "php -r 'define(\"GHAIM_API\", true); require \"api/lib/bootstrap.php\"; \$s = ghaim_load_store();
+    foreach ([[\"family\" => \"oriental\", \"for\" => \"women\"], [\"family\" => \"oriental\", \"for\" => \"men\"], [\"family\" => \"oud\"]] as \$f) {
+      \$r = ghaim_search_products(\$s, \$f + [\"max_price\" => 300, \"in_stock_only\" => true]);
+      if (\$r[\"count\"] < 1 || isset(\$r[\"note\"])) exit(1);
+    }'"
 
 echo "== servers"
 write_config ""
@@ -131,7 +137,7 @@ check "recommendation: 200" '[ "$status" = 200 ]'
 check_json "recommendation: reply has product cards [[p01]] [[p14]] [[p03]] and chips" \
   'str_contains($j["text"], "[[p01]]") && str_contains($j["text"], "[[p14]]") && str_contains($j["text"], "[[p03]]") && str_contains($j["text"], "[[chips:")'
 check_json "recommendation: one search step with the filters and the result count" \
-  '$j["steps"] === [["k" => "search", "f" => ["for" => "women", "max_price" => 300, "occasion" => "gift"], "c" => 7]] && $j["actions"] === []'
+  '$j["steps"] === [["k" => "search", "f" => ["for" => "women", "max_price" => 300, "occasion" => "gift"], "c" => 10]] && $j["actions"] === []'
 check "recommendation: tools and the static prompt are cached; per-request part in a second block" \
   'last_mock | php -r "\$r = json_decode(stream_get_contents(STDIN), true)[\"body\"];
      exit((\$r[\"system\"][0][\"cache_control\"][\"type\"] === \"ephemeral\" && !isset(\$r[\"system\"][1][\"cache_control\"])
@@ -173,7 +179,7 @@ check_json "parallel tools: p01 capped at stock, p08 out of stock is a tool erro
    && str_contains($j["text"], "Results: ok,error,ok,ok") && str_contains($j["text"], "Amber Vanilla is out of stock") && str_contains($j["text"], "Already handed over")'
 
 status=$(chat 'MOCK_EMPTYINPUT')
-check_json "empty tool input {} goes back to the API as an object" '$j["text"] === "Found 15 products." && $j["steps"][0]["f"] === []'
+check_json "empty tool input {} goes back to the API as an object" '$j["text"] === "Found 19 products." && $j["steps"][0]["f"] === []'
 
 before=$(mock_calls)
 status=$(chat 'MOCK_LOOP')
