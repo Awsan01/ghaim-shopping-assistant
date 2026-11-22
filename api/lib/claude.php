@@ -38,7 +38,8 @@ function ghaim_chat(array $cfg, string $model, array $req, array $store, array &
     $tools = ghaim_tools($store);
     $messages = $req['messages'];
     $state = ['cart' => $req['cart'], 'handoff' => null, 'actions' => [], 'steps' => []];
-    $ctx = ['today' => $now->setTime(0, 0), 'next_ticket_id' => $req['next_ticket_id'], 'wa_button' => $req['wa_button']];
+    $ctx = ['today' => $now->setTime(0, 0), 'next_ticket_id' => $req['next_ticket_id'], 'wa_button' => $req['wa_button'],
+        'shown' => ghaim_shown_products($store, $req['messages'])];
     $deadline = microtime(true) + GHAIM_TIME_BUDGET;
     $texts = [];
     $stop = '';

@@ -149,6 +149,10 @@ check "recommendation: fast = claude-haiku-5-5 at low effort, max_tokens 700, ke
 check "recommendation: the cached prompt has the Arabic grammar rule and its examples" \
   'last_mock | php -r "\$s = json_decode(stream_get_contents(STDIN), true)[\"body\"][\"system\"][0][\"text\"];
      exit((str_contains(\$s, \"Arabic grammar: make every pronoun\") && str_contains(\$s, \"تحب ريحته تكون زهرية ناعمة\")) ? 0 : 1);"'
+check "recommendation: the cached prompt has the selling rules (no repeats, honest when nothing else fits)" \
+  'last_mock | php -r "\$s = json_decode(stream_get_contents(STDIN), true)[\"body\"][\"system\"][0][\"text\"];
+     exit((str_contains(\$s, \"Sell like an experienced perfume seller\") && str_contains(\$s, \"Never offer a product twice as a new choice\")
+       && str_contains(\$s, \"هذا كل اللي عندنا من العطور الشرقية بحدود 300 ريال\")) ? 0 : 1);"'
 
 status=$(chat 'وين طلبي رقم 1042؟' wa smart '[{"id":"p03","qty":2}]' '["T-1001"]' T-1002)
 check "order 1042: 200" '[ "$status" = 200 ]'
@@ -172,6 +176,27 @@ check_json "add to cart: the model saw the updated cart total" 'str_contains($j[
 status=$(chat 'أبغى أكلم موظف' web fast '[]' '["T-1001","T-1002"]' T-1003)
 check_json "handoff: action with the ticket id the page asked for" \
   '$j["actions"][0]["type"] === "handoff" && $j["actions"][0]["ticket_id"] === "T-1003" && $j["actions"][0]["summary"] !== "" && $j["steps"] === [["k" => "hand", "id" => "T-1003"]] && str_contains($j["text"], "T-1003")'
+
+# "another option" after earlier suggestions: [[p16]] [[p17]] were shown, [[p16]] only in the second run
+another() { # shown-markers -> a 3-turn chat ending with "أبغى خيار ثاني"
+  post "$(php -r 'echo json_encode(["messages" => [
+      ["role" => "user", "content" => "أبغى عطر شرقي لزوجتي بحدود 300"],
+      ["role" => "assistant", "content" => "عندي لك خيارات حلوة.\n" . $argv[1] . "\n[[chips: أبغى خيار ثاني]]"],
+      ["role" => "user", "content" => "أبغى خيار ثاني"]],
+    "channel" => "web", "speed" => "fast", "cart" => [], "open_tickets" => [], "next_ticket_id" => "T-1001", "wa_button" => false],
+    JSON_UNESCAPED_UNICODE);' -- "$1")"
+}
+status=$(another $'[[p16]]\n[[p17]]')
+check_json "another option, nothing new left: says so, offers another family or a higher price, repeats no card" \
+  'str_contains($j["text"], "هذا كل اللي عندنا") && str_contains($j["text"], "شرقي بسعر أعلى") && !preg_match("/\[\[p\d\d\]\]/", $j["text"])'
+check "another option: shown products are listed in the prompt; search marks them and says nothing new fits" \
+  'last_mock | php -r "\$r = json_decode(stream_get_contents(STDIN), true)[\"body\"]; \$res = json_decode(end(\$r[\"messages\"])[\"content\"][0][\"content\"], true);
+     exit((str_contains(\$r[\"system\"][1][\"text\"], \"Already shown in this chat: Saffron Rose / ورد وزعفران (p16), Amber Musk / مسك العنبر (p17).\")
+       && \$res[\"count\"] === 2 && \$res[\"new_count\"] === 0 && \$res[\"results\"][0][\"shown_before\"] === true && \$res[\"results\"][1][\"shown_before\"] === true
+       && str_contains(\$res[\"note\"], \"already shown\")) ? 0 : 1);"'
+status=$(another '[[p16]]')
+check_json "another option, one new left: offers the product not seen yet (p17), not p16 again" \
+  'str_contains($j["text"], "[[p17]]") && !str_contains($j["text"], "[[p16]]")'
 
 status=$(chat 'MOCK_PARALLEL' web fast '[{"id":"p01","qty":13}]' '[]' T-1007)
 check_json "parallel tools: p01 capped at stock, p08 out of stock is a tool error, one handoff per reply" \

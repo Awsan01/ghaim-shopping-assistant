@@ -105,8 +105,34 @@ function ghaim_view(array $p): array
     return $v;
 }
 
-/** search_products: filters, word matching and ranking exactly as in the browser version. */
-function ghaim_search_products(array $store, array $f): array
+/**
+ * Product ids the assistant already showed as cards in this chat: the [[p01]] markers in its
+ * earlier replies, in the order they first appeared.
+ */
+function ghaim_shown_products(array $store, array $messages): array
+{
+    $ids = [];
+    foreach ($messages as $m) {
+        if (($m['role'] ?? '') !== 'assistant' || !is_string($m['content'] ?? null)) {
+            continue;
+        }
+        preg_match_all('/\[\[\s*(p\d{2})\s*\]\]/i', $m['content'], $found);
+        foreach ($found[1] as $id) {
+            $id = strtolower($id);
+            if (isset($store['by_id'][$id]) && !in_array($id, $ids, true)) {
+                $ids[] = $id;
+            }
+        }
+    }
+    return $ids;
+}
+
+/**
+ * search_products: filters, word matching and ranking exactly as in the browser version.
+ * $shown: ids already shown in this chat. Those results come last and are marked shown_before,
+ * and the result says how many new ones there are.
+ */
+function ghaim_search_products(array $store, array $f, array $shown = []): array
 {
     $query = $f['query'] ?? '';
     $words = array_values(array_filter(
@@ -160,9 +186,22 @@ function ghaim_search_products(array $store, array $f): array
         ?: ($score($b) <=> $score($a))
         ?: ($max < INF ? $b['price'] <=> $a['price'] : $a['price'] <=> $b['price']));
 
-    $r = ['count' => count($list), 'results' => array_map('ghaim_view', array_slice($list, 0, 6))];
+    $isShown = static fn(array $p): bool => in_array($p['id'], $shown, true);
+    $new = array_values(array_filter($list, static fn(array $p): bool => !$isShown($p)));
+    if ($shown) {
+        $list = array_merge($new, array_values(array_filter($list, $isShown)));
+    }
+    $r = ['count' => count($list), 'results' => array_map(
+        static fn(array $p): array => $isShown($p) ? ghaim_view($p) + ['shown_before' => true] : ghaim_view($p),
+        array_slice($list, 0, 6)
+    )];
+    if ($shown) {
+        $r['new_count'] = count($new);
+    }
     if ($relaxed) {
         $r['note'] = 'No exact match. These are the closest options for this budget and person.';
+    } elseif ($shown && !$new) {
+        $r['note'] = 'Every match was already shown in this chat; nothing new fits these filters.';
     }
     return $r;
 }

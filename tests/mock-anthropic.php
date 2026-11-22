@@ -243,6 +243,23 @@ if (str_contains($customer, 'MOCK_PARALLEL')) {
 }
 
 // ---- the demo conversations ------------------------------------------------------------
+// "Another option" after earlier suggestions: the server marks what the customer has already
+// seen; a new product is offered if there is one, otherwise the reply says so and offers another
+// scent family or a higher price.
+if (preg_match('/خيار ثاني|خيار آخر|another option/iu', $customer)) {
+    if ($rounds === 0) {
+        tool('search_products', ['family' => 'oriental', 'for' => 'women', 'max_price' => 300], $model, $rounds);
+    }
+    $new = array_values(array_filter($result()['data']['results'] ?? [], static fn(array $p): bool => empty($p['shown_before'])));
+    if ($new) {
+        text(($ar ? 'عندي لك واحد ما شفته للحين، ريحته دافية وتناسب المساء.' : "Here's one you haven't seen yet, warm and good for evenings.")
+            . "\n[[" . $new[0]['id'] . "]]\n[[chips: " . ($ar ? 'أضفه للسلة | شي أخف' : 'Add it to my cart | Something lighter') . ']]', $model, $rounds);
+    }
+    text($ar
+        ? "هذا كل اللي عندنا من العطور الشرقية بحدود 300 ريال. تحب أوريك نوع ثاني بنفس الميزانية، ولا أشوف لك عطر شرقي بسعر أعلى شوي؟\n[[chips: نوع ثاني بنفس الميزانية | شرقي بسعر أعلى]]"
+        : "That's everything we have in oriental within 300 SAR. Shall I show you another scent family at the same budget, or oriental at a slightly higher price?\n[[chips: Another family, same budget | Oriental, higher price]]",
+        $model, $rounds);
+}
 if (preg_match('/turkey|تركيا/iu', $customer)) {
     text($ar
         ? "إيه نعم، نشحن لتركيا خلال 6 إلى 10 أيام عمل، والتوصيل بـ 95 ريال. الرسوم الجمركية إن وجدت يدفعها العميل.\n[[chips: أبغى أشوف هدايا | وش طرق الدفع؟ | وين طلبي؟]]"

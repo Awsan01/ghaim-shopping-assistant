@@ -24,8 +24,8 @@ The same assistant runs in three tabs: the store **website**, a **WhatsApp previ
 ## How it works
 
 1. **The page** (`index.html`, one file with inline CSS and JS) keeps the website chat and the WhatsApp chat separately in the browser, each with its own cart, plus the staff tickets. Only the settings (language, reply speed, steps on or off, WhatsApp number) are saved, in `localStorage`. For each message it posts that chat's last 16 turns with the channel, reply speed, that chat's cart and open tickets, and the next ticket id to `api/chat.php`. The browser never sends prompt text and cannot pick a model.
-2. **`api/chat.php`** checks the Origin header and the request, counts the message against the limits, and builds the system prompt on the server in two blocks. The first one holds the instructions and store policies; it is cached together with the four tools. The second holds what changes per request: the channel, today's date in Saudi time, the cart and the open tickets.
-3. **The tool loop** calls the Claude Messages API with cURL. `search_products` and `get_order_status` are answered from the files in `data/`. `add_to_cart` and `handoff_to_staff` are checked on the server (the product exists and is in stock; one handover per reply, using the ticket id the page sent) and come back to the page as actions. A message gets at most 5 model calls; the last allowed call has to answer in text.
+2. **`api/chat.php`** checks the Origin header and the request, counts the message against the limits, and builds the system prompt on the server in two blocks. The first one holds the instructions and store policies; it is cached together with the four tools. The second holds what changes per request: the channel, today's date in Saudi time, the cart, the open tickets and the products already shown in this chat (read from the `[[p01]]` markers in the earlier replies).
+3. **The tool loop** calls the Claude Messages API with cURL. `search_products` and `get_order_status` are answered from the files in `data/`. Search results the customer has already seen are marked and listed last, so when someone asks for another option the assistant offers something new, or says honestly that nothing else fits and offers another scent family or a higher budget. `add_to_cart` and `handoff_to_staff` are checked on the server (the product exists and is in stock; one handover per reply, using the ticket id the page sent) and come back to the page as actions. A message gets at most 5 model calls; the last allowed call has to answer in text.
 4. **The reply** is `{text, actions, steps}`. While waiting, the page shows typing dots. It then shows the steps one by one (about 250 ms apart), applies the actions to the cart and the staff inbox, and renders the text with its product cards (`[[p01]]`) and quick replies (`[[chips: a | b]]`).
 
 `api/health.php` answers `{"ok":true}` when the private config is found, enabled and has a key. It never calls Claude. The page uses it for the green status dot.
@@ -136,6 +136,7 @@ tests/smoke.sh
 It runs `php -l` on every PHP file, starts the app and the mock Claude API with `php -S`, and checks, among others:
 
 - a recommendation with product cards, the lookup of order 1042, the add-to-cart action, the handoff action with its ticket id;
+- a request for another option: no product is offered twice, and when nothing new fits the reply says so;
 - the 5-call tool loop, retries on 529 and 5xx, and how API errors map to busy, paused and error;
 - invalid input → 400, too many messages → 429, wrong Origin → 403, missing config or `enabled => false` → 503;
 - that the config is found above `public_html` with `open_basedir` set, that the usage log has no message text, and that the key never reaches a response.
