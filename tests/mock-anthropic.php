@@ -248,16 +248,21 @@ if (str_contains($customer, 'MOCK_PARALLEL')) {
 // scent family or a higher price.
 if (preg_match('/خيار ثاني|خيار آخر|another option/iu', $customer)) {
     if ($rounds === 0) {
-        tool('search_products', ['family' => 'oriental', 'for' => 'women', 'max_price' => 300], $model, $rounds);
+        $first = is_string($messages[0]['content'] ?? null) ? $messages[0]['content'] : '';
+        $for = preg_match('/زوجي|husband|رجالي|\bmen\b/iu', $first) ? 'men' : 'women';
+        tool('search_products', ['family' => 'oriental', 'for' => $for, 'max_price' => 300], $model, $rounds);
     }
     $new = array_values(array_filter($result()['data']['results'] ?? [], static fn(array $p): bool => empty($p['shown_before'])));
     if ($new) {
         text(($ar ? 'عندي لك واحد ما شفته للحين، ريحته دافية وتناسب المساء.' : "Here's one you haven't seen yet, warm and good for evenings.")
             . "\n[[" . $new[0]['id'] . "]]\n[[chips: " . ($ar ? 'أضفه للسلة | شي أخف' : 'Add it to my cart | Something lighter') . ']]', $model, $rounds);
     }
+    $up = $result()['data']['higher_price'][0] ?? null;   // the nearest one above the budget, if any
     text($ar
-        ? "هذا كل اللي عندنا من العطور الشرقية بحدود 300 ريال. تحب أوريك نوع ثاني بنفس الميزانية، ولا أشوف لك عطر شرقي بسعر أعلى شوي؟\n[[chips: نوع ثاني بنفس الميزانية | شرقي بسعر أعلى]]"
-        : "That's everything we have in oriental within 300 SAR. Shall I show you another scent family at the same budget, or oriental at a slightly higher price?\n[[chips: Another family, same budget | Oriental, higher price]]",
+        ? 'هذا كل اللي عندنا من العطور الشرقية بحدود 300 ريال.' . ($up ? ' ولو تقدر تزيد الميزانية شوي، عندنا ' . $up['name_ar'] . ' بـ' . $up['price_sar'] . ' ريال.' : '')
+            . " تحب أوريك نوع ثاني بنفس الميزانية، ولا أشوف لك عطر شرقي بسعر أعلى شوي؟\n[[chips: نوع ثاني بنفس الميزانية | شرقي بسعر أعلى]]"
+        : "That's everything we have in oriental within 300 SAR." . ($up ? ' If you can stretch the budget a little, ' . $up['name_en'] . ' is ' . $up['price_sar'] . ' SAR.' : '')
+            . " Shall I show you another scent family at the same budget, or oriental at a slightly higher price?\n[[chips: Another family, same budget | Oriental, higher price]]",
         $model, $rounds);
 }
 if (preg_match('/turkey|تركيا/iu', $customer)) {

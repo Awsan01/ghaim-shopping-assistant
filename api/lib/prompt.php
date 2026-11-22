@@ -44,8 +44,8 @@ Style
 Selling
 - Sell like an experienced perfume seller helping a customer in the shop, not like a search engine. Recommend what you would honestly pick for them and say in your own words why it suits them: how it smells, when to wear it, who it suits. When you show two or three products, compare them in a few words so the choice is easy, for example which one is lighter and which one lasts longer.
 - Remember what the customer already told you (who it is for, taste, budget) and use it; don't ask again.
-- Never offer a product twice as a new choice. The products you already showed are listed under "Already shown in this chat", and search results the customer has seen are marked shown_before. When the customer asks for another option, recommend only products they haven't seen. You may mention an earlier product by name, but don't put its card again unless the customer asks to see it.
-- If you have already shown everything that fits, or the search says nothing new fits, say so honestly, the way a seller would, and let the customer choose: another scent family within the same budget, or the same family at a higher price. To name the nearest higher-priced option and its price, search again without max_price. Examples:
+- Never offer a product twice as a new choice. Search results the customer has already seen are marked shown_before. When the customer asks for another option, recommend only products they haven't seen. You may mention an earlier product by name, but don't put its card again unless the customer asks to see it.
+- If you have already shown everything that fits, or the search says nothing new fits, say so honestly, the way a seller would, and let the customer choose: another scent family within the same budget, or the same family at a higher price. If the search result has higher_price, name the nearest one and its price; don't search again for it. Examples:
   «هذا كل اللي عندنا من العطور الشرقية بحدود 300 ريال. تحب أوريك نوع ثاني بنفس الميزانية، ولا أشوف لك عطر شرقي بسعر أعلى شوي؟»
   "That's everything we have in oriental within 300 SAR. Shall I show you another scent family at the same budget, or oriental at a slightly higher price?"
 - If nothing matches the request at all, say that plainly first, then offer the closest options and say why they are close.
@@ -68,7 +68,7 @@ Store policies
 TXT . GHAIM_POLICIES;
 }
 
-/** Second system block: channel, today's date, cart, open tickets and the products already shown. Not cached. */
+/** Second system block: channel, today's date, cart and open tickets. Not cached. */
 function ghaim_request_prompt(array $req, array $store, DateTimeImmutable $now): string
 {
     $channel = $req['channel'] === 'wa'
@@ -79,17 +79,12 @@ function ghaim_request_prompt(array $req, array $store, DateTimeImmutable $now):
         ? implode(', ', array_map(static fn(array $i): string => $i['name_en'] . ' x' . $i['qty'], $cart['items'])) . ' (total ' . $cart['total_sar'] . ' SAR)'
         : 'empty';
     $open = $req['open_tickets'] ? implode(', ', $req['open_tickets']) : 'none';
-    $shown = array_map(
-        static fn(string $id): string => $store['by_id'][$id]['en'] . ' / ' . $store['by_id'][$id]['ar'] . ' (' . $id . ')',
-        ghaim_shown_products($store, $req['messages'])
-    );
 
     return $channel . "\n\n"
         . "Now\n"
         . '- Today is ' . $now->format('D M d Y') . ".\n"
         . '- Cart: ' . $cartText . ".\n"
-        . '- Open staff tickets: ' . $open . ".\n"
-        . '- Already shown in this chat: ' . ($shown ? implode(', ', $shown) : 'none') . '.';
+        . '- Open staff tickets: ' . $open . '.';
 }
 
 /** The four tools, with the same names, descriptions and schemas as the browser version. */

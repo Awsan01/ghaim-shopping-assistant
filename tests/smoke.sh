@@ -177,24 +177,29 @@ status=$(chat 'أبغى أكلم موظف' web fast '[]' '["T-1001","T-1002"]' T
 check_json "handoff: action with the ticket id the page asked for" \
   '$j["actions"][0]["type"] === "handoff" && $j["actions"][0]["ticket_id"] === "T-1003" && $j["actions"][0]["summary"] !== "" && $j["steps"] === [["k" => "hand", "id" => "T-1003"]] && str_contains($j["text"], "T-1003")'
 
-# "another option" after earlier suggestions: [[p16]] [[p17]] were shown, [[p16]] only in the second run
-another() { # shown-markers -> a 3-turn chat ending with "أبغى خيار ثاني"
+# "another option" after earlier suggestions: the customer has seen some products already
+another() { # first-message shown-markers -> a 3-turn chat ending with "أبغى خيار ثاني"
   post "$(php -r 'echo json_encode(["messages" => [
-      ["role" => "user", "content" => "أبغى عطر شرقي لزوجتي بحدود 300"],
-      ["role" => "assistant", "content" => "عندي لك خيارات حلوة.\n" . $argv[1] . "\n[[chips: أبغى خيار ثاني]]"],
+      ["role" => "user", "content" => $argv[1]],
+      ["role" => "assistant", "content" => "عندي لك خيارات حلوة.\n" . $argv[2] . "\n[[chips: أبغى خيار ثاني]]"],
       ["role" => "user", "content" => "أبغى خيار ثاني"]],
     "channel" => "web", "speed" => "fast", "cart" => [], "open_tickets" => [], "next_ticket_id" => "T-1001", "wa_button" => false],
-    JSON_UNESCAPED_UNICODE);' -- "$1")"
+    JSON_UNESCAPED_UNICODE);' -- "$1" "$2")"
 }
-status=$(another $'[[p16]]\n[[p17]]')
+before=$(mock_calls)
+status=$(another 'أبغى عطر شرقي لزوجتي بحدود 300' $'[[p16]]\n[[p17]]')
 check_json "another option, nothing new left: says so, offers another family or a higher price, repeats no card" \
   'str_contains($j["text"], "هذا كل اللي عندنا") && str_contains($j["text"], "شرقي بسعر أعلى") && !preg_match("/\[\[p\d\d\]\]/", $j["text"])'
-check "another option: shown products are listed in the prompt; search marks them and says nothing new fits" \
+check "another option: the search marks what was seen and says nothing new fits; one search, two model calls" \
   'last_mock | php -r "\$r = json_decode(stream_get_contents(STDIN), true)[\"body\"]; \$res = json_decode(end(\$r[\"messages\"])[\"content\"][0][\"content\"], true);
-     exit((str_contains(\$r[\"system\"][1][\"text\"], \"Already shown in this chat: Saffron Rose / ورد وزعفران (p16), Amber Musk / مسك العنبر (p17).\")
-       && \$res[\"count\"] === 2 && \$res[\"new_count\"] === 0 && \$res[\"results\"][0][\"shown_before\"] === true && \$res[\"results\"][1][\"shown_before\"] === true
-       && str_contains(\$res[\"note\"], \"already shown\")) ? 0 : 1);"'
-status=$(another '[[p16]]')
+     exit((\$res[\"count\"] === 2 && \$res[\"new_count\"] === 0 && \$res[\"results\"][0][\"shown_before\"] === true && \$res[\"results\"][1][\"shown_before\"] === true
+       && str_contains(\$res[\"note\"], \"already shown\") && !isset(\$res[\"higher_price\"])) ? 0 : 1);" && [ $(( $(mock_calls) - before )) = 2 ]'
+check "another option: the per-request prompt stays the same (no shown list), so the conversation cache keeps working" \
+  'last_mock | php -r "\$s = json_decode(stream_get_contents(STDIN), true)[\"body\"][\"system\"][1][\"text\"]; exit(!str_contains(\$s, \"shown\") ? 0 : 1);"'
+status=$(another 'أبغى عطر شرقي لزوجي بحدود 300' $'[[p18]]\n[[p17]]')
+check_json "another option for a man: names the nearest oriental above the budget (Desert Amber, 349 SAR) from the same search" \
+  'str_contains($j["text"], "عنبر الصحراء بـ349 ريال") && !preg_match("/\[\[p\d\d\]\]/", $j["text"]) && count($j["steps"]) === 1'
+status=$(another 'أبغى عطر شرقي لزوجتي بحدود 300' '[[p16]]')
 check_json "another option, one new left: offers the product not seen yet (p17), not p16 again" \
   'str_contains($j["text"], "[[p17]]") && !str_contains($j["text"], "[[p16]]")'
 

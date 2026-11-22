@@ -130,7 +130,8 @@ function ghaim_shown_products(array $store, array $messages): array
 /**
  * search_products: filters, word matching and ranking exactly as in the browser version.
  * $shown: ids already shown in this chat. Those results come last and are marked shown_before,
- * and the result says how many new ones there are.
+ * and the result says how many new ones there are. When nothing new fits within max_price, the
+ * result also lists up to 2 in-stock products just above it (higher_price).
  */
 function ghaim_search_products(array $store, array $f, array $shown = []): array
 {
@@ -147,9 +148,11 @@ function ghaim_search_products(array $store, array $f, array $shown = []): array
     $minH = ghaim_js_number($f['min_hours'] ?? null);
     $only = ($f['in_stock_only'] ?? null) === true;
 
-    $base = static fn(array $p): bool => $p['price'] <= $max
-        && ($who === null || $who === 'unisex' || $p['for'] === $who || $p['for'] === 'unisex')
-        && (!$only || $p['stock'] > 0);
+    $forWho = static fn(array $p): bool => $who === null || $who === 'unisex' || $p['for'] === $who || $p['for'] === 'unisex';
+    $base = static fn(array $p): bool => $p['price'] <= $max && $forWho($p) && (!$only || $p['stock'] > 0);
+    $fits = static fn(array $p): bool => ($fam === null || $p['fam'] === $fam)
+        && ($occ === null || in_array($occ, $p['tags'], true))
+        && (is_array($p['hours']) ? ($p['hours'][0] ?? NAN) >= $minH : $minH == 0);
 
     $score = static function (array $p) use ($words, $store): int {
         if (!$words) {
@@ -169,10 +172,7 @@ function ghaim_search_products(array $store, array $f, array $shown = []): array
         return $n;
     };
 
-    $list = array_values(array_filter($store['products'], static fn(array $p): bool => $base($p)
-        && ($fam === null || $p['fam'] === $fam)
-        && ($occ === null || in_array($occ, $p['tags'], true))
-        && (is_array($p['hours']) ? ($p['hours'][0] ?? NAN) >= $minH : $minH == 0)));
+    $list = array_values(array_filter($store['products'], static fn(array $p): bool => $base($p) && $fits($p)));
 
     if ($words && array_filter($list, static fn(array $p): bool => $score($p) > 0)) {
         $list = array_values(array_filter($list, static fn(array $p): bool => $score($p) > 0));
@@ -202,6 +202,19 @@ function ghaim_search_products(array $store, array $f, array $shown = []): array
         $r['note'] = 'No exact match. These are the closest options for this budget and person.';
     } elseif ($shown && !$new) {
         $r['note'] = 'Every match was already shown in this chat; nothing new fits these filters.';
+    }
+    if ($max < INF && ($relaxed || ($shown && !$new))) {
+        // The nearest in-stock products that fit everything but the budget, so the assistant can
+        // offer "or a little more?" without another model call.
+        $above = array_values(array_filter($store['products'], static fn(array $p): bool => $p['price'] > $max
+            && $p['stock'] > 0 && $forWho($p) && $fits($p) && !$isShown($p)));
+        if ($words && array_filter($above, static fn(array $p): bool => $score($p) > 0)) {
+            $above = array_values(array_filter($above, static fn(array $p): bool => $score($p) > 0));
+        }
+        usort($above, static fn(array $a, array $b): int => $a['price'] <=> $b['price']);
+        if ($above) {
+            $r['higher_price'] = array_map('ghaim_view', array_slice($above, 0, 2));
+        }
     }
     return $r;
 }
