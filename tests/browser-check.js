@@ -8,6 +8,7 @@
 const { chromium, devices } = require('playwright');
 
 const APP = process.env.APP_URL || 'http://127.0.0.1:8092/';
+const PROVIDER = process.env.PROVIDER || '';   // gemini or claude: what api/health.php should report
 const SHOTS = process.argv[2] || '';
 let failed = 0;
 const ok = (cond, label) => { console.log((cond ? '  ok   ' : '  FAIL ') + label); if (!cond) failed++; };
@@ -45,6 +46,13 @@ async function waitIdle(page) {
   await page.waitForFunction(() => { const imgs = [...document.querySelectorAll('#log .msg.bot .pc img')].slice(0, 3); return imgs.length === 3 && imgs.every(i => i.complete && i.naturalWidth > 0); }, null, { timeout: 5000 }).catch(() => {});
   ok(await page.evaluate(() => { const imgs = [...document.querySelectorAll('#log .msg.bot .pc img')].slice(0, 3); return imgs.length === 3 && imgs.every(i => i.complete && i.naturalWidth > 0); }), 'product cards show their photos');
   ok(await page.getAttribute('html', 'dir') === 'rtl', 'page starts in Arabic, right to left');
+  if (PROVIDER === 'gemini') {
+    ok(await page.locator('#form #pnote').isVisible() && /Gemini API من Google/.test(await page.locator('#pnote').innerText()), 'Gemini: a privacy line under the chat box names Google’s Gemini API');
+    ok(/يعمل على Gemini/.test(await page.locator('#side').innerText()), 'Gemini: the side panel says it runs on Gemini');
+  } else if (PROVIDER === 'claude') {
+    ok(await page.locator('#pnote').isHidden(), 'Claude: no Gemini privacy line');
+    ok(/يعمل على Claude/.test(await page.locator('#side').innerText()), 'Claude: the side panel says it runs on Claude');
+  }
 
   await page.locator('#chips .chip').first().click();   // the gift starter
   await waitIdle(page);
@@ -127,6 +135,9 @@ async function waitIdle(page) {
   await page.click('#langBtn');
   ok(await page.getAttribute('html', 'dir') === 'ltr' && await page.getAttribute('html', 'lang') === 'en', 'language switch flips the page to English, left to right');
   ok(await page.locator('#name').innerText() === 'Ghaim Perfumes', 'store name is translated');
+  if (PROVIDER === 'gemini') {
+    ok(await page.locator('#pnote').innerText() === 'This demo uses Google’s Gemini API, so please don’t share personal information.', 'Gemini: the privacy line is in English too');
+  }
   await sendText(page, 'A gift perfume for my wife, budget 300 SAR');
   bot = await lastBot(page);
   ok(/gift picks/.test(await bot.innerText()) && await bot.locator('.pc').count() === 3, 'English question gets an English reply with cards');
