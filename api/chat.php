@@ -34,15 +34,18 @@ if ($limit !== null) {
 }
 
 @set_time_limit(GHAIM_TIME_BUDGET + 30);
+$provider = $cfg['provider'];
 $model = ghaim_model($cfg, $req['speed']);
 $usage = ghaim_new_usage();
 try {
-    $reply = ghaim_chat($cfg, $model, $req, $store, $usage);
+    $reply = $provider === 'gemini'
+        ? ghaim_gemini_chat($cfg, $model, $req, $store, $usage)
+        : ghaim_chat($cfg, $model, $req, $store, $usage);
 } catch (GhaimUpstreamError $e) {
-    error_log('ghaim: Claude API ' . $e->getMessage());
-    ghaim_log_usage($storage, $model, $usage, $e->kind);
+    error_log('ghaim: ' . ($provider === 'gemini' ? 'Gemini' : 'Claude') . ' API ' . $e->getMessage());
+    ghaim_log_usage($storage, $provider, $model, $usage, $e->kind);
     if ($e->kind === 'busy') {
-        ghaim_send(503, ['error' => 'busy'], ['Retry-After' => '10']);
+        ghaim_send(503, ['error' => 'busy'], ['Retry-After' => (string) ($e->retryAfter ?? 10)]);
     }
     if ($e->kind === 'paused') {
         ghaim_send(503, ['error' => 'paused']);
@@ -50,5 +53,5 @@ try {
     ghaim_send(502, ['error' => 'error']);
 }
 
-ghaim_log_usage($storage, $model, $usage, isset($reply['refused']) ? 'refused' : (isset($reply['truncated']) ? 'truncated' : 'ok'));
+ghaim_log_usage($storage, $provider, $model, $usage, isset($reply['refused']) ? 'refused' : (isset($reply['truncated']) ? 'truncated' : 'ok'));
 ghaim_send(200, $reply);

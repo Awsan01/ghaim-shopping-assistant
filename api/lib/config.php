@@ -7,7 +7,16 @@ if (!defined('GHAIM_API')) {
     exit;
 }
 
+const GHAIM_PROVIDERS = ['gemini', 'claude'];
+
 const GHAIM_DEFAULTS = [
+    'provider' => 'gemini',
+    'gemini_api_key' => '',
+    'gemini_models' => [
+        'fast' => 'gemini-3.1-flash-lite',
+        'smart' => 'gemini-3.8-flash',
+    ],
+    'gemini_base_url' => 'https://generativelanguage.googleapis.com',
     'anthropic_api_key' => '',
     'workspace_id' => '',
     'models' => [
@@ -129,7 +138,8 @@ function ghaim_load_config(): ?array
 
 /**
  * The config when the assistant may answer, or null for "demo paused":
- * no config file, enabled = false, or no usable API key or base URL.
+ * no config file, enabled = false, an unknown provider, or no usable API key or base URL
+ * for the selected provider. Only the selected provider's settings are checked.
  */
 function ghaim_ready_config(): ?array
 {
@@ -140,23 +150,44 @@ function ghaim_ready_config(): ?array
     if (filter_var($cfg['enabled'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== true) {
         return null;
     }
-    $key = is_string($cfg['anthropic_api_key']) ? trim($cfg['anthropic_api_key']) : '';
-    if ($key === '' || !preg_match('/^[\x21-\x7e]+$/', $key)) {
-        error_log('ghaim: anthropic_api_key is empty or has spaces in ' . $cfg['_file']);
+    $provider = is_string($cfg['provider']) ? strtolower(trim($cfg['provider'])) : '';
+    if (!in_array($provider, GHAIM_PROVIDERS, true)) {
+        error_log('ghaim: provider must be "gemini" or "claude" in ' . $cfg['_file']);
         return null;
     }
-    $workspace = is_string($cfg['workspace_id']) ? trim($cfg['workspace_id']) : '';
-    if ($workspace !== '' && !preg_match('/^[\x21-\x7e]+$/', $workspace)) {
-        error_log('ghaim: workspace_id has characters that cannot go in a header');
-        return null;
+    $cfg['provider'] = $provider;
+
+    if ($provider === 'gemini') {
+        $key = is_string($cfg['gemini_api_key']) ? trim($cfg['gemini_api_key']) : '';
+        if ($key === '' || !preg_match('/^[\x21-\x7e]+$/', $key)) {
+            error_log('ghaim: gemini_api_key is empty or has spaces in ' . $cfg['_file']);
+            return null;
+        }
+        if (!ghaim_base_url_ok($cfg['gemini_base_url'])) {
+            error_log('ghaim: gemini_base_url must be https (http is allowed only for localhost)');
+            return null;
+        }
+        $cfg['gemini_api_key'] = $key;
+        $cfg['gemini_base_url'] = rtrim(trim($cfg['gemini_base_url']), '/');
+    } else {
+        $key = is_string($cfg['anthropic_api_key']) ? trim($cfg['anthropic_api_key']) : '';
+        if ($key === '' || !preg_match('/^[\x21-\x7e]+$/', $key)) {
+            error_log('ghaim: anthropic_api_key is empty or has spaces in ' . $cfg['_file']);
+            return null;
+        }
+        $workspace = is_string($cfg['workspace_id']) ? trim($cfg['workspace_id']) : '';
+        if ($workspace !== '' && !preg_match('/^[\x21-\x7e]+$/', $workspace)) {
+            error_log('ghaim: workspace_id has characters that cannot go in a header');
+            return null;
+        }
+        if (!ghaim_base_url_ok($cfg['anthropic_base_url'])) {
+            error_log('ghaim: anthropic_base_url must be https (http is allowed only for localhost)');
+            return null;
+        }
+        $cfg['anthropic_api_key'] = $key;
+        $cfg['workspace_id'] = $workspace;
+        $cfg['anthropic_base_url'] = rtrim(trim($cfg['anthropic_base_url']), '/');
     }
-    if (!ghaim_base_url_ok($cfg['anthropic_base_url'])) {
-        error_log('ghaim: anthropic_base_url must be https (http is allowed only for localhost)');
-        return null;
-    }
-    $cfg['anthropic_api_key'] = $key;
-    $cfg['workspace_id'] = $workspace;
-    $cfg['anthropic_base_url'] = rtrim(trim($cfg['anthropic_base_url']), '/');
     $cfg['max_tokens'] = is_numeric($cfg['max_tokens']) ? max(64, min(4096, (int) $cfg['max_tokens'])) : 4096;
     $limits = is_array($cfg['limits']) ? $cfg['limits'] : [];
     $cfg['limits'] = [];
@@ -181,10 +212,21 @@ function ghaim_base_url_ok(mixed $url): bool
     return $scheme === 'https' || ($scheme === 'http' && in_array($host, ['localhost', '127.0.0.1', '::1'], true));
 }
 
-/** Model id for "fast" or "smart". The browser can only pick one of these two names. */
+/**
+ * Model id for "fast" or "smart" from the selected provider's list. The browser can only pick
+ * one of these two names. A Gemini model id goes into the URL path, so it is limited to
+ * letters, digits, dots, dashes and underscores.
+ */
 function ghaim_model(array $cfg, string $speed): string
 {
-    $model = $cfg['models'][$speed] ?? null;
+    if (($cfg['provider'] ?? '') === 'gemini') {
+        $model = is_array($cfg['gemini_models']) ? ($cfg['gemini_models'][$speed] ?? null) : null;
+        if (!is_string($model) || !preg_match('/^[A-Za-z0-9._-]{1,100}$/', $model)) {
+            $model = GHAIM_DEFAULTS['gemini_models'][$speed];
+        }
+        return $model;
+    }
+    $model = is_array($cfg['models']) ? ($cfg['models'][$speed] ?? null) : null;
     if (!is_string($model) || !preg_match('/^[A-Za-z0-9._:@\/-]{1,100}$/', $model)) {
         $model = GHAIM_DEFAULTS['models'][$speed];
     }

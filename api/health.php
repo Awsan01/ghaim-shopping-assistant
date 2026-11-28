@@ -1,6 +1,7 @@
 <?php
-// GET api/health.php: {"ok":true} when the config is found, enabled and has an API key.
-// It never calls Claude. The page uses it for the status dot next to the store name.
+// GET api/health.php: {"ok":true,"provider":"gemini"} when the config is found, enabled and
+// has an API key for the selected provider ("gemini" or "claude"). It never calls the AI
+// provider. The page uses it for the status dot next to the store name and the privacy note.
 declare(strict_types=1);
 
 const GHAIM_API = true;
@@ -19,4 +20,4 @@ if ($cfg === null || !function_exists('curl_init') || ghaim_storage_dir($cfg) ==
 }
 ghaim_load_store();   // a broken data file answers 500 here too
 
-ghaim_send(200, ['ok' => true]);
+ghaim_send(200, ['ok' => true, 'provider' => $cfg['provider']]);

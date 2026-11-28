@@ -139,15 +139,20 @@ function ghaim_ip_salt(array $cfg, string $storage): string
     return is_string($saved) && strlen(trim($saved)) >= 32 ? trim($saved) : $new;
 }
 
+const GHAIM_USAGE_HEADER = 'time,provider,model,input_tokens,output_tokens,cache_write_tokens,cache_read_tokens,status';
+// Logs written before the provider switch: every line in them was answered by Claude.
+const GHAIM_USAGE_HEADER_OLD = 'time,model,input_tokens,output_tokens,cache_write_tokens,cache_read_tokens,status';
+
 /**
- * One CSV line per answered request in usage-YYYY-MM.csv: time, model, token counts and
- * status. No message text and no IP addresses.
+ * One CSV line per answered request in usage-YYYY-MM.csv: time, provider, model, token counts
+ * and status. No message text and no IP addresses. A log started before the provider column
+ * existed is upgraded in place first (its lines get "claude").
  */
-function ghaim_log_usage(string $storage, string $model, array $usage, string $status): void
+function ghaim_log_usage(string $storage, string $provider, string $model, array $usage, string $status): void
 {
     $now = ghaim_now();
     $file = $storage . DIRECTORY_SEPARATOR . 'usage-' . $now->format('Y-m') . '.csv';
-    $h = @fopen($file, 'a');
+    $h = @fopen($file, 'c+');
     if ($h === false) {
         error_log('ghaim: cannot write the usage log');
         return;
@@ -155,10 +160,26 @@ function ghaim_log_usage(string $storage, string $model, array $usage, string $s
     if (flock($h, LOCK_EX)) {
         if ((fstat($h)['size'] ?? 0) === 0) {
             @chmod($file, 0600);
-            fwrite($h, "time,model,input_tokens,output_tokens,cache_write_tokens,cache_read_tokens,status\n");
+            fwrite($h, GHAIM_USAGE_HEADER . "\n");
+        } else {
+            rewind($h);
+            $first = rtrim((string) fgets($h), "\r\n");
+            if ($first === GHAIM_USAGE_HEADER_OLD) {
+                $rest = (string) stream_get_contents($h);
+                $lines = [GHAIM_USAGE_HEADER];
+                foreach (preg_split('/\r?\n/', $rest, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $line) {
+                    $cols = explode(',', $line, 2);
+                    $lines[] = $cols[0] . ',claude' . (isset($cols[1]) ? ',' . $cols[1] : '');
+                }
+                ftruncate($h, 0);
+                rewind($h);
+                fwrite($h, implode("\n", $lines) . "\n");
+            }
         }
+        fseek($h, 0, SEEK_END);
         fwrite($h, implode(',', [
             $now->format('c'),
+            preg_replace('/[^a-z]/', '', $provider),
             preg_replace('/[^A-Za-z0-9._:@\/-]/', '', $model),
             $usage['input'],
             $usage['output'],
