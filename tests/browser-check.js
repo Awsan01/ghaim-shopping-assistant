@@ -47,14 +47,14 @@ async function waitIdle(page) {
   ok(await page.evaluate(() => { const imgs = [...document.querySelectorAll('#log .msg.bot .pc img')].slice(0, 3); return imgs.length === 3 && imgs.every(i => i.complete && i.naturalWidth > 0); }), 'product cards show their photos');
   ok(await page.getAttribute('html', 'dir') === 'rtl', 'page starts in Arabic, right to left');
   if (PROVIDER === 'gemini') {
-    ok(await page.locator('#form #pnote').isVisible() && /Gemini API من Google/.test(await page.locator('#pnote').innerText()), 'Gemini: a privacy line under the chat box names Google’s Gemini API');
+    ok(await page.locator('#pnote').count() === 0 && !/Gemini API من Google/.test(await page.locator('#form').innerText()), 'Gemini: no privacy line under the chat box');
     ok(/يعمل على Gemini/.test(await page.locator('#side').innerText()), 'Gemini: the side panel says it runs on Gemini');
     const plan = page.locator('#form #plan');
-    ok(await plan.isVisible() && /نسخة مجانية من الذكاء الاصطناعي/.test(await plan.innerText()), 'Gemini: the free-plan notice is shown next to the privacy line');
+    ok(await plan.isVisible() && /نسخة مجانية من الذكاء الاصطناعي/.test(await plan.innerText()), 'Gemini: the free-plan notice is shown under the chat box');
     ok(await plan.locator('a').getAttribute('href') === 'https://wa.me/905376464371' && await plan.locator('a').innerText() === 'تواصل مع أوسان'
       && await plan.locator('a').getAttribute('target') === '_blank', 'Gemini: «تواصل مع أوسان» links to WhatsApp in a new tab');
   } else if (PROVIDER === 'claude') {
-    ok(await page.locator('#pnote').isHidden() && await page.locator('#plan').isHidden(), 'Claude: no Gemini privacy line and no free-plan notice');
+    ok(await page.locator('#plan').isHidden(), 'Claude: no free-plan notice');
     ok(/يعمل على Claude/.test(await page.locator('#side').innerText()), 'Claude: the side panel says it runs on Claude');
   }
 
@@ -145,7 +145,6 @@ async function waitIdle(page) {
   ok(await page.getAttribute('html', 'dir') === 'ltr' && await page.getAttribute('html', 'lang') === 'en', 'language switch flips the page to English, left to right');
   ok(await page.locator('#name').innerText() === 'Ghaim Perfumes', 'store name is translated');
   if (PROVIDER === 'gemini') {
-    ok(await page.locator('#pnote').innerText() === 'This demo uses Google’s Gemini API, so please don’t share personal information.', 'Gemini: the privacy line is in English too');
     ok(await page.locator('#plan').innerText() === 'This demo runs on a free AI plan, so the number of tries per day is limited. For a more powerful version without limits for your store or business, contact Awsan.'
       && await page.locator('#plan a').innerText() === 'contact Awsan', 'Gemini: the free-plan notice and its link are in English too');
   }

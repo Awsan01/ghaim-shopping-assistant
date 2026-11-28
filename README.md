@@ -28,7 +28,7 @@ The same assistant runs in three tabs: the store **website**, a **WhatsApp previ
 3. **The tool loop** calls the AI provider set in the private config with cURL: the Gemini API (`generateContent`, the default) or the Claude Messages API. Both get the same prompt, the same four tools and the same limits, and both return the same reply to the page. `search_products` and `get_order_status` are answered from the files in `data/`. Search results the customer has already seen (the `[[p01]]` markers in earlier replies) are marked and listed last. When nothing new fits, the same search also returns the nearest products just above the budget, so the assistant can say so honestly and offer another scent family or a higher budget without another model call. `add_to_cart` and `handoff_to_staff` are checked on the server (the product exists and is in stock; one handover per reply, using the ticket id the page sent) and come back to the page as actions. A message gets at most 5 model calls; the last allowed call has to answer in text.
 4. **The reply** is `{text, actions, steps}`. While waiting, the page shows typing dots. It then shows the steps one by one (about 250 ms apart), applies the actions to the cart and the staff inbox, and renders the text with its product cards (`[[p01]]`) and quick replies (`[[chips: a | b]]`).
 
-`api/health.php` answers `{"ok":true,"provider":"gemini"}` (or `"claude"`) when the private config is found, enabled and has a key for the selected provider. It never calls the AI provider. The page uses it for the green status dot, and for the privacy line under the chat box when the provider is Gemini.
+`api/health.php` answers `{"ok":true,"provider":"gemini"}` (or `"claude"`) when the private config is found, enabled and has a key for the selected provider. It never calls the AI provider. The page uses it for the green status dot, and for the free-plan notice under the chat box when the provider is Gemini.
 
 ## Project structure
 
@@ -86,9 +86,9 @@ A config written before the switch existed still loads. Without a `provider` lin
 
 A key from a project without billing uses the **free tier**. Its limits (requests per minute and per day, tokens per minute) depend on the model and change from time to time; AI Studio shows the current limits and your usage for each project. When a limit is reached, visitors see "The service is busy" and the server passes on Google's retry time.
 
-**Privacy:** on the free tier, Google may use prompts and replies to improve its products, and people may review them. So while the provider is Gemini, the page shows one line under the chat box, in Arabic or English: *This demo uses Google's Gemini API, so please don't share personal information.* See the [Gemini API terms](https://ai.google.dev/gemini-api/terms) for the details.
+**Privacy:** on the free tier, Google may use prompts and replies to improve its products, and people may review them. See the [Gemini API terms](https://ai.google.dev/gemini-api/terms) for the details. The settings sheet asks visitors not to share personal details.
 
-**Free-plan notice:** also while the provider is Gemini, a second line says the demo runs on a free AI plan with a limited number of tries per day, and links "contact Awsan" to WhatsApp (`https://wa.me/905376464371`, the `CONTACT` constant in `index.html`). The same notice and link appear inside the "busy" and "limit reached" messages, so visitors who hit a limit see how to get in touch.
+**Free-plan notice:** while the provider is Gemini, a line under the chat box says the demo runs on a free AI plan with a limited number of tries per day, and links "contact Awsan" to WhatsApp (`https://wa.me/905376464371`, the `CONTACT` constant in `index.html`). The same notice and link appear inside the "busy" and "limit reached" messages, so visitors who hit a limit see how to get in touch.
 
 ## Deploying on Hostinger
 
@@ -119,7 +119,7 @@ The site is plain files: Hostinger's Git deployment copies the `main` branch as 
 6. **Check it.**
    - `https://shop.awsankhaled.com/api/health.php` shows `{"ok":true,"provider":"gemini"}`;
    - `https://shop.awsankhaled.com/.git/config`, `/data/orders.json`, `/README.md` and `/api/lib/config.php` all answer 403;
-   - the page shows a green dot next to the store name, the Gemini privacy line under the chat box, and a question gets a reply.
+   - the page shows a green dot next to the store name, the free-plan notice under the chat box, and a question gets a reply.
 7. **Limits.** On the Gemini free tier there is nothing to pay; AI Studio shows the project's rate limits and usage. If you enable billing on the key's project, or use Claude, set a spend limit: a budget alert in Google Cloud Billing for Gemini, a monthly spend limit in the Claude Console for Claude. If a key is invalid, or Claude's credit or spend limit runs out, the demo shows "paused" instead of an error.
 
 ### Pausing the demo
@@ -179,7 +179,7 @@ It runs the whole test twice, once against the Gemini mock (`tests/mock-gemini.p
 - invalid input → 400, too many messages → 429, wrong Origin → 403, missing config, `enabled => false`, an unknown provider or no key for the selected provider → 503;
 - that the config is found above `public_html` with `open_basedir` set, that the usage log names the provider and has no message text, and that the key never reaches a response.
 
-With Node and [Playwright](https://playwright.dev) installed it also runs `tests/browser-check.js`, which drives the page in headless Chromium. It checks for console errors, that the product photos load, a reply with product cards, the cart badge, the WhatsApp tab, that the website and WhatsApp chats (and their carts) stay separate, a ticket in the staff inbox, the language switch, the busy message with its retry button, the stop button and, on Gemini, the privacy line and the free-plan notice (under the chat box and in the busy and limit messages, with the WhatsApp link).
+With Node and [Playwright](https://playwright.dev) installed it also runs `tests/browser-check.js`, which drives the page in headless Chromium. It checks for console errors, that the product photos load, a reply with product cards, the cart badge, the WhatsApp tab, that the website and WhatsApp chats (and their carts) stay separate, a ticket in the staff inbox, the language switch, the busy message with its retry button, the stop button and, on Gemini, the free-plan notice (under the chat box and in the busy and limit messages, with the WhatsApp link).
 
 ## Editing the store
 
@@ -241,7 +241,7 @@ Prices and free-tier limits change, so this README does not list them. See Googl
   - Every JSON response is sent with `Cache-Control: no-store`.
 - **Cost limits** count messages per visitor and for the whole site in small files guarded with `flock`. Visitor IPs are stored only as salted hashes, and old counter files are removed.
 - **Limited reach.** The assistant can only read the catalogue and the sample orders. Its two other tools only change the visitor's own page (cart and staff inbox), so a visitor who tries to trick it cannot affect other visitors or any real system.
-- **Privacy.** Messages are sent to the selected provider's API (Gemini or Claude) to produce a reply. The server stores no message text, and the settings sheet asks visitors not to share personal details. On Gemini the page also says so under the chat box, because Google may use free-tier prompts to improve its products.
+- **Privacy.** Messages are sent to the selected provider's API (Gemini or Claude) to produce a reply. The server stores no message text, and the settings sheet asks visitors not to share personal details. On the Gemini free tier, Google may use prompts to improve its products.
 - **Behind a CDN or proxy**, `REMOTE_ADDR` can be the proxy's address. The per-visitor limits then apply to everyone together, while the site-wide limit still holds.
 
 ## Troubleshooting

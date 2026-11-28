@@ -1,7 +1,7 @@
 <?php
 // GET api/health.php: {"ok":true,"provider":"gemini"} when the config is found, enabled and
 // has an API key for the selected provider ("gemini" or "claude"). It never calls the AI
-// provider. The page uses it for the status dot next to the store name and the privacy note.
+// provider. The page uses it for the status dot next to the store name and the free-plan notice.
 declare(strict_types=1);
 
 const GHAIM_API = true;

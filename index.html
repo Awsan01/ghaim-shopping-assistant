@@ -122,7 +122,6 @@ main{min-height:0;width:100%;max-width:1100px;margin:0 auto;display:grid;grid-te
 .wa svg{width:18px;height:18px}
 .composer{padding:6px max(16px,3vw) 8px;background:var(--bg)}
 .pnote{margin:6px 0 0;font-size:11.5px;line-height:1.45;color:var(--mut);text-align:center}
-.pnote+.pnote{margin-top:2px}
 .plan a{color:var(--bink);font-weight:600;text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px}
 .plan a:hover{text-decoration-thickness:2px}
 .err .plan{flex-basis:100%;margin:0;font-size:13px;line-height:1.5;color:var(--mut)}
@@ -237,7 +236,6 @@ details summary{cursor:pointer;color:var(--mut);font-size:14px;min-height:32px;d
           <input id="q" dir="auto" enterkeyhint="send" maxlength="1000" placeholder="اكتب رسالتك…">
           <button type="submit" class="send" id="sendBtn" aria-label="إرسال"></button>
         </div>
-        <p class="pnote" id="pnote" hidden></p>
         <p class="pnote plan" id="plan" hidden></p>
       </form>
     </section>
@@ -287,7 +285,6 @@ cart:'السلة',cartEmpty:'السلة فارغة. اطلب من المساعد
 settings:'الإعدادات',waLabel:'رقم واتساب لفريق الخدمة',waHint:'أرقام فقط مع رمز الدولة، مثل 966501234567. عند التحويل يظهر للعميل زر «متابعة على واتساب».',
 speed:'سرعة الردود',fast:'سريع',smart:'أذكى وأبطأ',stepsLabel:'خطوات المساعد',on:'إظهار',off:'إخفاء',reset:'محادثة جديدة',resetHint:'يمسح المحادثة والسلة وصندوق فريق الخدمة.',done:'تم',
 about:n=>'يعمل المساعد '+(n?'على '+n+' ':'')+'عبر خادم المتجر. هذا عرض تجريبي عام، فلا تشارك بيانات شخصية.',
-geminiNote:'يستخدم هذا العرض Gemini API من Google، فلا تشارك أي معلومات شخصية.',
 plan:['هذا العرض التجريبي يعمل على نسخة مجانية من الذكاء الاصطناعي، لذلك عدد المحاولات محدود يومياً. لنسخة أقوى وبلا حدود لمتجرك أو شركتك، ','تواصل مع أوسان','.'],
 sideTitle:'كيف يعمل المساعد',sideLead:'يفهم العميل بالعربية والإنجليزية، ويستخدم أدوات المتجر بدل أن يخمّن.',
 tools:[['search','يبحث في المنتجات','حسب الرائحة والميزانية والمناسبة'],['order','يتابع الطلبات','يقرأ الحالة وموعد الوصول'],['cart','يضيف إلى السلة','عندما يطلب العميل ذلك'],['staff','يحوّل إلى موظف','مع ملخص جاهز في صندوق فريق الخدمة']],
@@ -314,7 +311,6 @@ cart:'Cart',cartEmpty:'Your cart is empty. Ask the assistant to add something, o
 settings:'Settings',waLabel:'Staff WhatsApp number',waHint:'Digits with country code, like 966501234567. On handover, the customer sees a “Continue on WhatsApp” button.',
 speed:'Reply speed',fast:'Fast',smart:'Smarter, slower',stepsLabel:'Assistant steps',on:'Show',off:'Hide',reset:'Start a new chat',resetHint:'Clears the chat, the cart and the staff inbox.',done:'Done',
 about:n=>'The assistant runs '+(n?'on '+n+' ':'')+'through the store’s server. This is a public demo, so please don’t share personal details.',
-geminiNote:'This demo uses Google’s Gemini API, so please don’t share personal information.',
 plan:['This demo runs on a free AI plan, so the number of tries per day is limited. For a more powerful version without limits for your store or business, ','contact Awsan','.'],
 sideTitle:'How the assistant works',sideLead:'It understands Arabic and English and uses the store’s tools instead of guessing.',
 tools:[['search','Searches products','by scent, budget and occasion'],['order','Tracks orders','reads the status and delivery date'],['cart','Adds to the cart','when the customer asks'],['staff','Hands over to staff','with a ready summary in the staff inbox']],
@@ -391,8 +387,8 @@ async function checkHealth(){
   try{const r=await fetch('api/health.php',{cache:'no-store'});const d=await r.json().catch(()=>null);setProvider(d&&typeof d.provider==='string'?d.provider:aiProvider);setAi(r.ok&&d&&d.ok===true?'on':'off')}catch(e){setAi('off')}
 }
 function setProvider(p){if(aiProvider!==p){aiProvider=p;renderPnote();renderSide()}}
-// One line under the chat box when the replies come from Google's Gemini API.
-function renderPnote(){const e=$('#pnote'),pl=$('#plan'),on=aiProvider==='gemini';e.hidden=!on;e.textContent=on?t('geminiNote'):'';pl.hidden=!on;pl.innerHTML=on?planHtml():''}
+// The free-plan notice under the chat box, only while the replies come from Gemini.
+function renderPnote(){const pl=$('#plan'),on=aiProvider==='gemini';pl.hidden=!on;pl.innerHTML=on?planHtml():''}
 // The free-plan notice with a WhatsApp link to Awsan: under the chat box, and in the busy and
 // limit messages, while the demo runs on Gemini's free tier.
 const CONTACT='https://wa.me/905376464371';
