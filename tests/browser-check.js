@@ -49,8 +49,12 @@ async function waitIdle(page) {
   if (PROVIDER === 'gemini') {
     ok(await page.locator('#form #pnote').isVisible() && /Gemini API من Google/.test(await page.locator('#pnote').innerText()), 'Gemini: a privacy line under the chat box names Google’s Gemini API');
     ok(/يعمل على Gemini/.test(await page.locator('#side').innerText()), 'Gemini: the side panel says it runs on Gemini');
+    const plan = page.locator('#form #plan');
+    ok(await plan.isVisible() && /نسخة مجانية من الذكاء الاصطناعي/.test(await plan.innerText()), 'Gemini: the free-plan notice is shown next to the privacy line');
+    ok(await plan.locator('a').getAttribute('href') === 'https://wa.me/905376464371' && await plan.locator('a').innerText() === 'تواصل مع أوسان'
+      && await plan.locator('a').getAttribute('target') === '_blank', 'Gemini: «تواصل مع أوسان» links to WhatsApp in a new tab');
   } else if (PROVIDER === 'claude') {
-    ok(await page.locator('#pnote').isHidden(), 'Claude: no Gemini privacy line');
+    ok(await page.locator('#pnote').isHidden() && await page.locator('#plan').isHidden(), 'Claude: no Gemini privacy line and no free-plan notice');
     ok(/يعمل على Claude/.test(await page.locator('#side').innerText()), 'Claude: the side panel says it runs on Claude');
   }
 
@@ -82,6 +86,11 @@ async function waitIdle(page) {
   await sendText(page, 'MOCK_529');
   bot = await lastBot(page);
   ok(/مشغولة/.test(await bot.innerText()) && await bot.locator('.retry').count() === 1, 'busy error is explained and offers a retry button');
+  if (PROVIDER === 'gemini') {
+    ok(await bot.locator('.err .plan a[href="https://wa.me/905376464371"]').count() === 1, 'Gemini: the busy error shows the free-plan notice with the WhatsApp link');
+  } else if (PROVIDER === 'claude') {
+    ok(await bot.locator('.err .plan').count() === 0, 'Claude: the busy error has no free-plan notice');
+  }
   for (let i = errors.length - 1; i >= mark; i--) {
     if (/Failed to load resource.*\b503\b/.test(errors[i])) errors.splice(i, 1);
   }
@@ -137,10 +146,25 @@ async function waitIdle(page) {
   ok(await page.locator('#name').innerText() === 'Ghaim Perfumes', 'store name is translated');
   if (PROVIDER === 'gemini') {
     ok(await page.locator('#pnote').innerText() === 'This demo uses Google’s Gemini API, so please don’t share personal information.', 'Gemini: the privacy line is in English too');
+    ok(await page.locator('#plan').innerText() === 'This demo runs on a free AI plan, so the number of tries per day is limited. For a more powerful version without limits for your store or business, contact Awsan.'
+      && await page.locator('#plan a').innerText() === 'contact Awsan', 'Gemini: the free-plan notice and its link are in English too');
   }
   await sendText(page, 'A gift perfume for my wife, budget 300 SAR');
   bot = await lastBot(page);
   ok(/gift picks/.test(await bot.innerText()) && await bot.locator('.pc').count() === 3, 'English question gets an English reply with cards');
+
+  // limit reached: the server's 429, faked here so the real limits stay untouched
+  const mark2 = errors.length;
+  await page.route('**/api/chat.php', (route) => route.fulfill({ status: 429, contentType: 'application/json', headers: { 'Retry-After': '1800' }, body: '{"error":"rate_limited","scope":"visitor","retry_after":1800}' }));
+  await sendText(page, 'hello');
+  bot = await lastBot(page);
+  ok(/message limit/.test(await bot.innerText()) && (await bot.locator('.err .plan a[href="https://wa.me/905376464371"]').count() === (PROVIDER === 'gemini' ? 1 : 0)),
+    'limit reached: explained' + (PROVIDER === 'gemini' ? ', with the free-plan notice and its WhatsApp link' : ', with no free-plan notice on Claude'));
+  if (SHOTS) await page.screenshot({ path: SHOTS + '/desktop-limit.png' });
+  await page.unroute('**/api/chat.php');
+  for (let i = errors.length - 1; i >= mark2; i--) {
+    if (/Failed to load resource.*\b429\b/.test(errors[i])) errors.splice(i, 1);
+  }
   await page.click('#langBtn');
   await ctx.close();
 

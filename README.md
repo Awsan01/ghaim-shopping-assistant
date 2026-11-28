@@ -88,6 +88,8 @@ A key from a project without billing uses the **free tier**. Its limits (request
 
 **Privacy:** on the free tier, Google may use prompts and replies to improve its products, and people may review them. So while the provider is Gemini, the page shows one line under the chat box, in Arabic or English: *This demo uses Google's Gemini API, so please don't share personal information.* See the [Gemini API terms](https://ai.google.dev/gemini-api/terms) for the details.
 
+**Free-plan notice:** also while the provider is Gemini, a second line says the demo runs on a free AI plan with a limited number of tries per day, and links "contact Awsan" to WhatsApp (`https://wa.me/905376464371`, the `CONTACT` constant in `index.html`). The same notice and link appear inside the "busy" and "limit reached" messages, so visitors who hit a limit see how to get in touch.
+
 ## Deploying on Hostinger
 
 The site is plain files: Hostinger's Git deployment copies the `main` branch as it is into the subdomain's folder. The API key never goes into that folder.
@@ -177,7 +179,7 @@ It runs the whole test twice, once against the Gemini mock (`tests/mock-gemini.p
 - invalid input → 400, too many messages → 429, wrong Origin → 403, missing config, `enabled => false`, an unknown provider or no key for the selected provider → 503;
 - that the config is found above `public_html` with `open_basedir` set, that the usage log names the provider and has no message text, and that the key never reaches a response.
 
-With Node and [Playwright](https://playwright.dev) installed it also runs `tests/browser-check.js`, which drives the page in headless Chromium. It checks for console errors, that the product photos load, a reply with product cards, the cart badge, the WhatsApp tab, that the website and WhatsApp chats (and their carts) stay separate, a ticket in the staff inbox, the language switch, the busy message with its retry button, the stop button and, on Gemini, the privacy line under the chat box.
+With Node and [Playwright](https://playwright.dev) installed it also runs `tests/browser-check.js`, which drives the page in headless Chromium. It checks for console errors, that the product photos load, a reply with product cards, the cart badge, the WhatsApp tab, that the website and WhatsApp chats (and their carts) stay separate, a ticket in the staff inbox, the language switch, the busy message with its retry button, the stop button and, on Gemini, the privacy line and the free-plan notice (under the chat box and in the busy and limit messages, with the WhatsApp link).
 
 ## Editing the store
 

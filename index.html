@@ -122,6 +122,10 @@ main{min-height:0;width:100%;max-width:1100px;margin:0 auto;display:grid;grid-te
 .wa svg{width:18px;height:18px}
 .composer{padding:6px max(16px,3vw) 8px;background:var(--bg)}
 .pnote{margin:6px 0 0;font-size:11.5px;line-height:1.45;color:var(--mut);text-align:center}
+.pnote+.pnote{margin-top:2px}
+.plan a{color:var(--bink);font-weight:600;text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px}
+.plan a:hover{text-decoration-thickness:2px}
+.err .plan{flex-basis:100%;margin:0;font-size:13px;line-height:1.5;color:var(--mut)}
 .foot{margin:0;padding:2px 16px max(8px,env(safe-area-inset-bottom));text-align:center;font-size:12px;color:var(--mut)}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
 .chips:empty{display:none}
@@ -234,6 +238,7 @@ details summary{cursor:pointer;color:var(--mut);font-size:14px;min-height:32px;d
           <button type="submit" class="send" id="sendBtn" aria-label="إرسال"></button>
         </div>
         <p class="pnote" id="pnote" hidden></p>
+        <p class="pnote plan" id="plan" hidden></p>
       </form>
     </section>
     <section class="col" id="staffView" hidden>
@@ -283,6 +288,7 @@ settings:'الإعدادات',waLabel:'رقم واتساب لفريق الخدم
 speed:'سرعة الردود',fast:'سريع',smart:'أذكى وأبطأ',stepsLabel:'خطوات المساعد',on:'إظهار',off:'إخفاء',reset:'محادثة جديدة',resetHint:'يمسح المحادثة والسلة وصندوق فريق الخدمة.',done:'تم',
 about:n=>'يعمل المساعد '+(n?'على '+n+' ':'')+'عبر خادم المتجر. هذا عرض تجريبي عام، فلا تشارك بيانات شخصية.',
 geminiNote:'يستخدم هذا العرض Gemini API من Google، فلا تشارك أي معلومات شخصية.',
+plan:['هذا العرض التجريبي يعمل على نسخة مجانية من الذكاء الاصطناعي، لذلك عدد المحاولات محدود يومياً. لنسخة أقوى وبلا حدود لمتجرك أو شركتك، ','تواصل مع أوسان','.'],
 sideTitle:'كيف يعمل المساعد',sideLead:'يفهم العميل بالعربية والإنجليزية، ويستخدم أدوات المتجر بدل أن يخمّن.',
 tools:[['search','يبحث في المنتجات','حسب الرائحة والميزانية والمناسبة'],['order','يتابع الطلبات','يقرأ الحالة وموعد الوصول'],['cart','يضيف إلى السلة','عندما يطلب العميل ذلك'],['staff','يحوّل إلى موظف','مع ملخص جاهز في صندوق فريق الخدمة']],
 tryOrders:'أرقام طلبات للتجربة',askOrder:n=>'وين طلبي رقم '+n+'؟',
@@ -309,6 +315,7 @@ settings:'Settings',waLabel:'Staff WhatsApp number',waHint:'Digits with country 
 speed:'Reply speed',fast:'Fast',smart:'Smarter, slower',stepsLabel:'Assistant steps',on:'Show',off:'Hide',reset:'Start a new chat',resetHint:'Clears the chat, the cart and the staff inbox.',done:'Done',
 about:n=>'The assistant runs '+(n?'on '+n+' ':'')+'through the store’s server. This is a public demo, so please don’t share personal details.',
 geminiNote:'This demo uses Google’s Gemini API, so please don’t share personal information.',
+plan:['This demo runs on a free AI plan, so the number of tries per day is limited. For a more powerful version without limits for your store or business, ','contact Awsan','.'],
 sideTitle:'How the assistant works',sideLead:'It understands Arabic and English and uses the store’s tools instead of guessing.',
 tools:[['search','Searches products','by scent, budget and occasion'],['order','Tracks orders','reads the status and delivery date'],['cart','Adds to the cart','when the customer asks'],['staff','Hands over to staff','with a ready summary in the staff inbox']],
 tryOrders:'Order numbers to try',askOrder:n=>'Where is my order '+n+'?',
@@ -385,7 +392,12 @@ async function checkHealth(){
 }
 function setProvider(p){if(aiProvider!==p){aiProvider=p;renderPnote();renderSide()}}
 // One line under the chat box when the replies come from Google's Gemini API.
-function renderPnote(){const e=$('#pnote'),on=aiProvider==='gemini';e.hidden=!on;e.textContent=on?t('geminiNote'):''}
+function renderPnote(){const e=$('#pnote'),pl=$('#plan'),on=aiProvider==='gemini';e.hidden=!on;e.textContent=on?t('geminiNote'):'';pl.hidden=!on;pl.innerHTML=on?planHtml():''}
+// The free-plan notice with a WhatsApp link to Awsan: under the chat box, and in the busy and
+// limit messages, while the demo runs on Gemini's free tier.
+const CONTACT='https://wa.me/905376464371';
+function planHtml(){const p=t('plan');return esc(p[0])+'<a href="'+CONTACT+'" target="_blank" rel="noopener">'+esc(p[1])+'</a>'+esc(p[2])}
+const planErr=m=>aiProvider==='gemini'&&['busy','rate_limited','site_limit'].includes(m.err);
 
 async function send(text){
   text=cap(String(text||'').trim(),1000);
@@ -399,7 +411,7 @@ async function send(text){
   await generate(ch);
 }
 // Composer and quick replies follow the chat on screen; a reply for the other chat waits there.
-function showChat(ch){if(view!=='staff'&&chan()===ch){setChips(CH[ch].chips);setComposer()}}
+function showChat(ch){if(view!=='staff'&&chan()===ch){const nb=nearBottom();setChips(CH[ch].chips);setComposer();if(nb)toBottom()}}
 async function generate(ch){
   const st=CH[ch],body=chatBody(ch);
   const bot={id:uid(),role:'bot',text:'',steps:[],products:[],chips:[],pending:true,time:Date.now()};
@@ -514,7 +526,7 @@ function msgHTML(m){
   const text=m.welcome?t('welcome'):clean(m.text);
   const steps=S.steps&&m.steps&&m.steps.length?'<div class="steps">'+m.steps.map(s=>'<div class="step'+(s.ok?'':' run')+'">'+(s.ok?I.check:I.spin)+'<span>'+esc(stepLabel(s)).replace(/(T-\d+)/g,'<bdi class="nw">$1</bdi>')+'</span></div>').join('')+'</div>':'';
   const typing=m.pending&&!text?'<div class="typing" aria-hidden="true"><i></i><i></i><i></i></div>':'';
-  const err=m.err?'<div class="err"><span>'+esc(errLabel(m))+'</span>'+(m.retry?'<button type="button" class="retry" data-retry="'+m.id+'">'+t('retry')+'</button>':'')+'</div>':'';
+  const err=m.err?'<div class="err"><span>'+esc(errLabel(m))+'</span>'+(m.retry?'<button type="button" class="retry" data-retry="'+m.id+'">'+t('retry')+'</button>':'')+(planErr(m)?'<p class="plan">'+planHtml()+'</p>':'')+'</div>':'';
   const cards=m.products&&m.products.length?'<div class="cards">'+m.products.map(id=>cardHTML(id,m.id)).join('')+'</div>':'';
   const ho=m.handoff?hoHTML(m.handoff):'';
   const inner=steps+typing+(text?'<div class="txt" dir="auto">'+fmt(text)+'</div>':'')+err+(text&&!m.pending?tm:'');
