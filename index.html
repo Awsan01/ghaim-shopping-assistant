@@ -121,6 +121,7 @@ main{min-height:0;width:100%;max-width:1100px;margin:0 auto;display:grid;grid-te
 .wa{display:inline-flex;align-items:center;gap:8px;margin-top:10px;height:44px;padding:0 18px;border-radius:12px;background:#1d8a4b;color:#fff;text-decoration:none;font-weight:600}
 .wa svg{width:18px;height:18px}
 .composer{padding:6px max(16px,3vw) 8px;background:var(--bg)}
+.pnote{margin:6px 0 0;font-size:11.5px;line-height:1.45;color:var(--mut);text-align:center}
 .foot{margin:0;padding:2px 16px max(8px,env(safe-area-inset-bottom));text-align:center;font-size:12px;color:var(--mut)}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
 .chips:empty{display:none}
@@ -232,6 +233,7 @@ details summary{cursor:pointer;color:var(--mut);font-size:14px;min-height:32px;d
           <input id="q" dir="auto" enterkeyhint="send" maxlength="1000" placeholder="اكتب رسالتك…">
           <button type="submit" class="send" id="sendBtn" aria-label="إرسال"></button>
         </div>
+        <p class="pnote" id="pnote" hidden></p>
       </form>
     </section>
     <section class="col" id="staffView" hidden>
@@ -279,11 +281,12 @@ waiting:'بانتظار الرد',resolved:'تم الحل',markDone:'إغلاق 
 cart:'السلة',cartEmpty:'السلة فارغة. اطلب من المساعد إضافة منتج، أو اضغط «أضف للسلة» على أي بطاقة.',total:'المجموع',cartNote:'الدفع غير مفعّل في هذا العرض التجريبي.',remove:'حذف',
 settings:'الإعدادات',waLabel:'رقم واتساب لفريق الخدمة',waHint:'أرقام فقط مع رمز الدولة، مثل 966501234567. عند التحويل يظهر للعميل زر «متابعة على واتساب».',
 speed:'سرعة الردود',fast:'سريع',smart:'أذكى وأبطأ',stepsLabel:'خطوات المساعد',on:'إظهار',off:'إخفاء',reset:'محادثة جديدة',resetHint:'يمسح المحادثة والسلة وصندوق فريق الخدمة.',done:'تم',
-about:'يعمل المساعد على Claude عبر خادم المتجر. هذا عرض تجريبي عام، فلا تشارك بيانات شخصية.',
+about:n=>'يعمل المساعد '+(n?'على '+n+' ':'')+'عبر خادم المتجر. هذا عرض تجريبي عام، فلا تشارك بيانات شخصية.',
+geminiNote:'يستخدم هذا العرض Gemini API من Google، فلا تشارك أي معلومات شخصية.',
 sideTitle:'كيف يعمل المساعد',sideLead:'يفهم العميل بالعربية والإنجليزية، ويستخدم أدوات المتجر بدل أن يخمّن.',
 tools:[['search','يبحث في المنتجات','حسب الرائحة والميزانية والمناسبة'],['order','يتابع الطلبات','يقرأ الحالة وموعد الوصول'],['cart','يضيف إلى السلة','عندما يطلب العميل ذلك'],['staff','يحوّل إلى موظف','مع ملخص جاهز في صندوق فريق الخدمة']],
 tryOrders:'أرقام طلبات للتجربة',askOrder:n=>'وين طلبي رقم '+n+'؟',
-engine:'يعمل على Claude',modeFast:'الوضع السريع',modeSmart:'الوضع الأذكى',toolsOn:'أدوات المتجر مفعّلة',
+engine:n=>'يعمل على '+n,modeFast:'الوضع السريع',modeSmart:'الوضع الأذكى',toolsOn:'أدوات المتجر مفعّلة',
 starters:['أبغى عطر هدية لزوجتي، ميزانيتي 300 ريال','وين طلبي رقم 1042؟','أبغى أكلم موظف','Do you ship to Turkey?'],
 err:{rate_limited:w=>'وصلت إلى الحد المسموح من الرسائل في هذا العرض التجريبي. حاول مرة أخرى بعد '+w+'.',site_limit:w=>'وصل العرض التجريبي إلى حدّه اليومي من الرسائل. حاول مرة أخرى بعد '+w+'.',busy:'الخدمة مشغولة الآن. حاول مرة أخرى بعد لحظات.',paused:'العرض التجريبي متوقف مؤقتاً. عُد إلينا لاحقاً.',network:'تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.',refused:'لا أستطيع المساعدة في هذا الطلب. أقدر أساعدك في العطور والطلبات.',too_large:'المحادثة طويلة جداً. ابدأ محادثة جديدة من الإعدادات.',bad_request:'تعذّر إرسال هذه الرسالة. ابدأ محادثة جديدة من الإعدادات.',other:'حدث خطأ غير متوقع. حاول مرة أخرى.'},
 wait:s=>{const m=Math.max(1,Math.ceil(s/60));if(m<60)return m===1?'دقيقة':m===2?'دقيقتين':m<=10?m+' دقائق':m+' دقيقة';const h=Math.ceil(m/60);return h===1?'ساعة':h===2?'ساعتين':h<=10?h+' ساعات':h+' ساعة'},
@@ -304,11 +307,12 @@ waiting:'Waiting',resolved:'Resolved',markDone:'Mark resolved',reopen:'Reopen',r
 cart:'Cart',cartEmpty:'Your cart is empty. Ask the assistant to add something, or tap “Add to cart” on a card.',total:'Total',cartNote:'Checkout is not part of this demo.',remove:'Remove',
 settings:'Settings',waLabel:'Staff WhatsApp number',waHint:'Digits with country code, like 966501234567. On handover, the customer sees a “Continue on WhatsApp” button.',
 speed:'Reply speed',fast:'Fast',smart:'Smarter, slower',stepsLabel:'Assistant steps',on:'Show',off:'Hide',reset:'Start a new chat',resetHint:'Clears the chat, the cart and the staff inbox.',done:'Done',
-about:'The assistant runs on Claude through the store’s server. This is a public demo, so please don’t share personal details.',
+about:n=>'The assistant runs '+(n?'on '+n+' ':'')+'through the store’s server. This is a public demo, so please don’t share personal details.',
+geminiNote:'This demo uses Google’s Gemini API, so please don’t share personal information.',
 sideTitle:'How the assistant works',sideLead:'It understands Arabic and English and uses the store’s tools instead of guessing.',
 tools:[['search','Searches products','by scent, budget and occasion'],['order','Tracks orders','reads the status and delivery date'],['cart','Adds to the cart','when the customer asks'],['staff','Hands over to staff','with a ready summary in the staff inbox']],
 tryOrders:'Order numbers to try',askOrder:n=>'Where is my order '+n+'?',
-engine:'Runs on Claude',modeFast:'fast mode',modeSmart:'smarter mode',toolsOn:'store tools on',
+engine:n=>'Runs on '+n,modeFast:'fast mode',modeSmart:'smarter mode',toolsOn:'store tools on',
 starters:['A gift perfume for my wife, budget 300 SAR','Where is my order 1042?','I want to talk to a person','وين طلبي رقم 1046؟'],
 err:{rate_limited:w=>'You’ve reached the message limit for this demo. Please try again in '+w+'.',site_limit:w=>'The demo has reached its daily message limit. Please try again in '+w+'.',busy:'The service is busy right now. Please try again in a moment.',paused:'The demo is paused for now. Please check back later.',network:'Couldn’t reach the server. Check your connection and try again.',refused:'I can’t help with that. I can help with perfumes and orders.',too_large:'This chat is too long. Start a new chat from Settings.',bad_request:'This message couldn’t be sent. Start a new chat from Settings.',other:'Something went wrong. Please try again.'},
 wait:s=>{const m=Math.max(1,Math.ceil(s/60));if(m<60)return m===1?'1 minute':m+' minutes';const h=Math.ceil(m/60);return h===1?'1 hour':h+' hours'},
@@ -323,7 +327,8 @@ const saveS=()=>{try{localStorage.setItem('ghaim-demo',JSON.stringify(S))}catch(
 const t=k=>T[S.lang][k];
 
 let tickets=[],seq=0,view='chat',lastChat='web',sheetKind=null;
-let aiState='wait';
+let aiState='wait',aiProvider='';
+const providerName=()=>({gemini:'Gemini',claude:'Claude'})[aiProvider]||'';
 const uid=()=>'m'+(++seq)+Date.now().toString(36);
 const welcome=c=>({id:'w-'+c,role:'bot',welcome:true,steps:[],products:['p01','p04','p14'],time:Date.now()});
 // The website and WhatsApp chats are independent: each has its own messages, cart, quick
@@ -376,8 +381,11 @@ function applyStep(s,r,bot,ch){
 }
 function setAi(s){if(aiState!==s){aiState=s;renderStatus();renderSide()}}
 async function checkHealth(){
-  try{const r=await fetch('api/health.php',{cache:'no-store'});const d=await r.json().catch(()=>null);setAi(r.ok&&d&&d.ok===true?'on':'off')}catch(e){setAi('off')}
+  try{const r=await fetch('api/health.php',{cache:'no-store'});const d=await r.json().catch(()=>null);setProvider(d&&typeof d.provider==='string'?d.provider:aiProvider);setAi(r.ok&&d&&d.ok===true?'on':'off')}catch(e){setAi('off')}
 }
+function setProvider(p){if(aiProvider!==p){aiProvider=p;renderPnote();renderSide()}}
+// One line under the chat box when the replies come from Google's Gemini API.
+function renderPnote(){const e=$('#pnote'),on=aiProvider==='gemini';e.hidden=!on;e.textContent=on?t('geminiNote'):''}
 
 async function send(text){
   text=cap(String(text||'').trim(),1000);
@@ -537,7 +545,7 @@ function renderTabs(){
 function renderCartBadge(){const n=Object.values(cur().cart).reduce((a,b)=>a+b,0);const b=$('#cartN');b.textContent=n;b.hidden=!n}
 function renderSide(){
   const L=T[S.lang],ic={search:I.search,order:I.order,cart:I.bag,staff:I.staff};
-  $('#side').innerHTML='<h3>'+L.sideTitle+'</h3><p class="mut">'+L.sideLead+'</p>'+L.tools.map(x=>'<div class="tool">'+ic[x[0]]+'<div><b>'+x[1]+'</b><span>'+x[2]+'</span></div></div>').join('')+(ORDERS.length?'<h4>'+L.tryOrders+'</h4><div class="orders">'+ORDERS.map(n=>'<button type="button" class="chip" data-order="'+esc(n)+'">'+esc(n)+'</button>').join('')+'</div>':'')+'<p class="mut small">'+L.engine+' · '+(S.speed==='smart'?L.modeSmart:L.modeFast)+(aiState==='on'?' · '+L.toolsOn:'')+'</p>';
+  $('#side').innerHTML='<h3>'+L.sideTitle+'</h3><p class="mut">'+L.sideLead+'</p>'+L.tools.map(x=>'<div class="tool">'+ic[x[0]]+'<div><b>'+x[1]+'</b><span>'+x[2]+'</span></div></div>').join('')+(ORDERS.length?'<h4>'+L.tryOrders+'</h4><div class="orders">'+ORDERS.map(n=>'<button type="button" class="chip" data-order="'+esc(n)+'">'+esc(n)+'</button>').join('')+'</div>':'')+'<p class="mut small">'+(providerName()?L.engine(providerName())+' · ':'')+(S.speed==='smart'?L.modeSmart:L.modeFast)+(aiState==='on'?' · '+L.toolsOn:'')+'</p>';
 }
 function timeTxt(s){try{return new Date(s).toLocaleTimeString(S.lang==='ar'?'ar-u-nu-latn':'en-GB',{hour:'2-digit',minute:'2-digit'})}catch(e){return ''}}
 function renderStaff(){
@@ -562,7 +570,7 @@ function renderSheet(){
     const c=cartSummary();
     pn.innerHTML='<h3>'+t('cart')+'</h3>'+(c.items.length?c.items.map(i=>'<div class="line"><span dir="auto">'+esc(L==='ar'?i.name_ar:i.name_en)+' × '+i.qty+'</span><span class="price">'+i.qty*i.price_sar+' '+t('sar')+'</span><button type="button" class="x" data-rm="'+i.id+'">'+t('remove')+'</button></div>').join('')+'<div class="line"><b>'+t('total')+'</b><span class="price">'+c.total_sar+' '+t('sar')+'</span></div><p class="hint">'+t('cartNote')+'</p>':'<p class="mut">'+t('cartEmpty')+'</p>')+'<button type="button" class="prim" data-close>'+t('done')+'</button>';
   }else if(sheetKind==='settings'){
-    pn.innerHTML='<h3>'+t('settings')+'</h3><div class="fld"><label for="waIn">'+t('waLabel')+'</label><input id="waIn" inputmode="tel" dir="ltr" value="'+esc(S.wa)+'" placeholder="966501234567"><p class="hint">'+t('waHint')+'</p></div><div class="fld"><span class="lbl">'+t('speed')+'</span><div class="seg"><button type="button" data-speed="fast" aria-pressed="'+(S.speed!=='smart')+'">'+t('fast')+'</button><button type="button" data-speed="smart" aria-pressed="'+(S.speed==='smart')+'">'+t('smart')+'</button></div></div><div class="fld"><span class="lbl">'+t('stepsLabel')+'</span><div class="seg"><button type="button" data-steps="1" aria-pressed="'+S.steps+'">'+t('on')+'</button><button type="button" data-steps="0" aria-pressed="'+!S.steps+'">'+t('off')+'</button></div></div><div class="fld"><button type="button" class="ghost" data-reset>'+t('reset')+'</button><p class="hint">'+t('resetHint')+'</p></div><p class="hint">'+t('about')+'</p><button type="button" class="prim" data-close>'+t('done')+'</button>';
+    pn.innerHTML='<h3>'+t('settings')+'</h3><div class="fld"><label for="waIn">'+t('waLabel')+'</label><input id="waIn" inputmode="tel" dir="ltr" value="'+esc(S.wa)+'" placeholder="966501234567"><p class="hint">'+t('waHint')+'</p></div><div class="fld"><span class="lbl">'+t('speed')+'</span><div class="seg"><button type="button" data-speed="fast" aria-pressed="'+(S.speed!=='smart')+'">'+t('fast')+'</button><button type="button" data-speed="smart" aria-pressed="'+(S.speed==='smart')+'">'+t('smart')+'</button></div></div><div class="fld"><span class="lbl">'+t('stepsLabel')+'</span><div class="seg"><button type="button" data-steps="1" aria-pressed="'+S.steps+'">'+t('on')+'</button><button type="button" data-steps="0" aria-pressed="'+!S.steps+'">'+t('off')+'</button></div></div><div class="fld"><button type="button" class="ghost" data-reset>'+t('reset')+'</button><p class="hint">'+t('resetHint')+'</p></div><p class="hint">'+t('about')(providerName())+'</p><button type="button" class="prim" data-close>'+t('done')+'</button>';
   }
 }
 function openSheet(k){sheetKind=k;renderSheet();$('#sheet').classList.add('open')}
@@ -574,7 +582,7 @@ function applyLang(){
   $('#cartBtn').setAttribute('aria-label',t('cartAria'));$('#setBtn').setAttribute('aria-label',t('setAria'));
   $('#tabChat').textContent=t('chat');$('#tabWa').textContent=t('waTab');$('#note').textContent=t('note');$('#q').placeholder=t('ph');
   $('#waName').textContent=t('store');$('#waSub').textContent=t('waBiz');
-  renderStatus();renderTabs();renderLog();renderStaff();renderSide();setChips(cur().chips);renderCartBadge();setComposer();
+  renderStatus();renderPnote();renderTabs();renderLog();renderStaff();renderSide();setChips(cur().chips);renderCartBadge();setComposer();
 }
 function resetAll(){
   for(const c of Object.keys(CH)){if(CH[c].ctl)CH[c].ctl.abort();resetChat(c)}
