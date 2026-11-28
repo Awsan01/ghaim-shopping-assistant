@@ -22,6 +22,7 @@ require __DIR__ . '/request.php';
 require __DIR__ . '/store.php';
 require __DIR__ . '/prompt.php';
 require __DIR__ . '/claude.php';
+require __DIR__ . '/gemini.php';
 require __DIR__ . '/limits.php';
 
 /** Hide PHP errors from visitors and turn anything unexpected into a plain JSON error. */

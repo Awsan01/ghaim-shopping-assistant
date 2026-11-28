@@ -15,10 +15,13 @@ const GHAIM_EFFORT = 'low';
 // Seconds one customer message may spend on model calls, retries included.
 const GHAIM_TIME_BUDGET = 90;
 
-/** A Claude API failure, sorted into what the visitor sees: busy, paused or error. */
+/**
+ * An AI provider failure, sorted into what the visitor sees: busy, paused or error.
+ * $retryAfter: seconds the provider asked us to wait (sent on as Retry-After), when known.
+ */
 final class GhaimUpstreamError extends RuntimeException
 {
-    public function __construct(public readonly string $kind, string $logMessage)
+    public function __construct(public readonly string $kind, string $logMessage, public readonly ?int $retryAfter = null)
     {
         parent::__construct($logMessage);
     }
